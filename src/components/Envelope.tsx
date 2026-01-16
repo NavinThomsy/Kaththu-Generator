@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import navinSeal from "figma:asset/927ea48388e50db575bfbe0ba2acc80fe2fd5b36.png";
+import { PaperTexture } from '@paper-design/shaders-react';
+// @ts-ignore
+import navinLogo from '../assets/Navin Logo.png';
 
 export interface EnvelopeProps {
   onOpen: () => void;
-  onClose?: () => void; // Added onClose
+  onClose?: () => void;
   isOpen: boolean;
   children: React.ReactNode;
   to?: string;
@@ -18,6 +19,33 @@ export interface EnvelopeProps {
   toSize?: number;
   fromFont?: string;
   fromSize?: number;
+  paperColor?: string;
+  insideEnvelopeColor?: string;
+  letterColor?: string;
+  sealSrc?: string;
+  postmarkText?: string;
+}
+
+// Wax Seal SVG
+function WaxSeal({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className}>
+      <defs>
+        <radialGradient id="sealGrad" cx="30%" cy="30%">
+          <stop offset="0%" stopColor="#c41e3a" />
+          <stop offset="50%" stopColor="#8b0000" />
+          <stop offset="100%" stopColor="#4a0000" />
+        </radialGradient>
+      </defs>
+      <path
+        d="M50 5 Q65 8 75 15 Q88 22 90 35 Q95 50 88 65 Q82 78 70 85 Q55 95 40 90 Q25 88 15 75 Q5 60 10 45 Q12 30 25 18 Q38 8 50 5Z"
+        fill="url(#sealGrad)"
+        style={{ filter: 'drop-shadow(2px 3px 4px rgba(0,0,0,0.4))' }}
+      />
+      <circle cx="50" cy="50" r="22" fill="none" stroke="#ffd700" strokeWidth="2" opacity="0.6" />
+      <text x="50" y="57" textAnchor="middle" fontSize="22" fontFamily="serif" fill="#ffd700" opacity="0.9">N</text>
+    </svg>
+  );
 }
 
 export function Envelope({
@@ -31,19 +59,25 @@ export function Envelope({
   logo1Src,
   logo2Src,
   toFont = "font-serif",
-  toSize = 24,
+  toSize = 14,
   fromFont = "font-serif",
-  fromSize = 14
+  fromSize = 14,
+  paperColor = "#ebe1cf",
+  insideEnvelopeColor = "#ebe1cf",
+  letterColor = "#ffffff",
+  sealSrc,
+  postmarkText = "LONDON"
 }: EnvelopeProps) {
   const [isFlipped, setIsFlipped] = useState(false);
 
-  // If envelope opens, ensure we are flipped to the back side
-  // When closing, wait for animation then flip back to front
+  // Derive colors - memoize if possible, but simple enough for now
+  const mainColor = paperColor;
+  const darkerColor = insideEnvelopeColor;
+
   useEffect(() => {
     if (isOpen) {
       setIsFlipped(true);
     } else {
-      // Small delay to let letter slide in before flipping
       const timer = setTimeout(() => {
         setIsFlipped(false);
       }, 500);
@@ -54,11 +88,10 @@ export function Envelope({
   return (
     <div className="flex flex-col items-center justify-center min-h-[600px] w-full p-4 perspective-1000">
 
-
       {/* 3D Envelope Container - moves down when letter rises */}
       <motion.div
         className="relative w-full aspect-[1.5] group cursor-pointer"
-        style={{ transformStyle: 'preserve-3d' }}
+        style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
         animate={{
           rotateY: isFlipped ? 0 : 180,
           y: isOpen ? 220 : 0
@@ -69,23 +102,41 @@ export function Envelope({
         }}
         onClick={() => !isFlipped && setIsFlipped(true)}
       >
+        {/* Edge spines to hide gap during rotation */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1 rounded-l-sm"
+          style={{
+            transform: 'translateX(-50%) rotateY(90deg)',
+            transformOrigin: 'right center',
+            backgroundColor: mainColor
+          }}
+        />
+        <div
+          className="absolute right-0 top-0 bottom-0 w-1 rounded-r-sm"
+          style={{
+            transform: 'translateX(50%) rotateY(-90deg)',
+            transformOrigin: 'left center',
+            backgroundColor: mainColor
+          }}
+        />
 
-        {/* ==============================
-            BACK FACE (Flap/Pocket Side) 
-            Rotated 0deg. 
-            When container is 0, this is visible.
-           ============================== */}
+        {/* ============================== BACK FACE (Flap/Pocket Side) ============================== */}
         <div className="absolute inset-0 backface-hidden" style={{ transform: 'rotateY(0deg)', transformStyle: 'preserve-3d' }}>
 
           {/* 1. Inside Back of Envelope (z=0) */}
-          <div className="absolute inset-0 bg-[#e0d6c2] shadow-xl rounded-sm backface-hidden" style={{ transform: 'translateZ(0px)' }}></div>
+          <div
+            className="absolute inset-0 shadow-xl rounded-sm backface-hidden"
+            style={{ transform: 'translateZ(0px)', backgroundColor: darkerColor }}
+          />
 
-          {/* 2. The Letter Itself - nested inside for proper 3D rotation */}
+          {/* 2. The Letter */}
           <motion.div
-            className="absolute left-1/2 bg-white shadow-lg p-8 text-gray-800 font-serif origin-top backface-hidden overflow-hidden"
+            className="absolute left-1/2 shadow-lg p-8 text-gray-800 font-serif origin-top backface-hidden overflow-hidden"
             style={{
               transformStyle: 'preserve-3d',
-              width: 'min(90%, 600px)' // Wider constraint
+              width: 'min(90%, 600px)',
+              backgroundColor: letterColor,
+              willChange: 'transform, opacity, height'
             }}
             initial="closed"
             animate={isOpen ? "open" : "closed"}
@@ -100,9 +151,9 @@ export function Envelope({
               },
               open: {
                 x: "-50%",
-                y: "-50%", // Rise to center 
+                y: "-50%",
                 z: 50,
-                height: "65vh", // Fixed height for internal scrolling
+                height: "65vh",
                 scale: 1,
                 top: "0%",
                 transition: {
@@ -115,7 +166,41 @@ export function Envelope({
               }
             }}
           >
-            <div className="relative z-10 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pr-2">{children}</div>
+
+
+            {/* Paper Texture Shader */}
+            <div className="absolute inset-0 pointer-events-none z-0 rounded-sm overflow-hidden mix-blend-multiply opacity-100">
+              <PaperTexture
+                style={{ width: '100%', height: '100%' }}
+                className="w-full h-full"
+                // @ts-ignore
+                colorBack="#ffffff"
+                colorFront="#f1efe8e3"
+                contrast={0.7}
+                roughness={0.4}
+                fiber={0.3}
+                fiberSize={0.4}
+                crumples={0.8}
+                crumpleSize={0.8}
+                folds={0.9}
+                foldCount={3}
+                drops={0.0}
+                fade={0}
+                seed={5.8}
+                // @ts-ignore - PaperTexture types might be missing scale/fit in some versions, but user requested it
+                options={{ scale: 0.6 }}
+              />
+            </div>
+
+            {/* User Logo (Top Right) */}
+            <div
+              className="absolute top-6 right-8 w-5 h-5 opacity-80 mix-blend-multiply z-20"
+              style={{ width: '20px', height: '20px' }}
+            >
+              <img src={navinLogo} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+
+            <div className="relative z-10 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pr-2 pt-2">{children}</div>
           </motion.div>
 
           {/* 3. Envelope Pocket (Front Flaps) - (z=20) */}
@@ -130,21 +215,24 @@ export function Envelope({
             }}
             style={{ transform: 'translateZ(20px)' }}
           >
-            <svg className="absolute inset-0 w-full h-full drop-shadow-md" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M0,0 L0,100 L55,55 Z" fill="#ebe1cf" stroke="#d4c5a9" strokeWidth="0.5" />
+            {/* Left Flap */}
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'drop-shadow(2px 1px 3px rgba(0,0,0,0.12))' }}>
+              <path d="M0,0 L0,100 L55,55 Z" fill={mainColor} />
             </svg>
-            <svg className="absolute inset-0 w-full h-full drop-shadow-md" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M100,0 L100,100 L45,55 Z" fill="#ebe1cf" stroke="#d4c5a9" strokeWidth="0.5" />
+            {/* Right Flap */}
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'drop-shadow(-2px 1px 3px rgba(0,0,0,0.12))' }}>
+              <path d="M100,0 L100,100 L45,55 Z" fill={mainColor} />
             </svg>
-            <svg className="absolute inset-0 w-full h-full drop-shadow-md" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <path d="M0,100 L100,100 L50,45 Z" fill="#ebe1cf" stroke="#d4c5a9" strokeWidth="0.5" />
+            {/* Bottom Flap */}
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'drop-shadow(0 -2px 4px rgba(0,0,0,0.1))' }}>
+              <path d="M0,100 L100,100 L50,45 Z" fill={mainColor} />
             </svg>
           </div>
 
           {/* 4. Top Flap (The "Lid") - Animates 180 degrees */}
           <motion.div
             className="absolute inset-0 w-full h-full origin-top pointer-events-none"
-            style={{ transformStyle: 'preserve-3d' }}
+            style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
             initial="closed"
             animate={isOpen ? "open" : "closed"}
             variants={{
@@ -164,8 +252,9 @@ export function Envelope({
                 if (!isOpen && isFlipped) onOpen();
               }}
             >
-              <svg className="w-full h-full filter drop-shadow-sm" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path d="M0,0 L100,0 L50,55 Z" fill="#ebe1cf" stroke="#d4c5a9" strokeWidth="0.5" />
+              {/* Top Flap */}
+              <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))' }}>
+                <path d="M0,0 L100,0 L50,55 Z" fill={mainColor} />
               </svg>
 
               {/* Wax Seal - CENTERED at 50% */}
@@ -175,54 +264,57 @@ export function Envelope({
                 whileTap={{ scale: 0.95 }}
                 animate={{ opacity: isOpen ? 0 : 1 }}
               >
-                <ImageWithFallback
-                  src={navinSeal}
-                  alt="Wax Seal"
-                  className="w-full h-full object-cover rounded-full drop-shadow-xl border-4 border-[#e0d6c2]/30"
-                />
+                {sealSrc ? (
+                  <img src={sealSrc} alt="Wax Seal" className="w-full h-full object-contain" style={{ filter: 'drop-shadow(2px 3px 4px rgba(0,0,0,0.4))' }} />
+                ) : (
+                  <WaxSeal className="w-full h-full" />
+                )}
               </motion.div>
             </div>
 
             {/* Back of Flap (Open state) */}
             <div className="absolute inset-0 backface-hidden" style={{ transform: 'rotateY(180deg)' }}>
               <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path d="M0,0 L100,0 L50,55 Z" fill="#e0d6c2" stroke="#d4c5a9" strokeWidth="0.5" />
+                <path d="M0,0 L100,0 L50,55 Z" fill={darkerColor} />
               </svg>
             </div>
           </motion.div>
         </div>
 
-        {/* ==============================
-            FRONT FACE (Address Side) 
-            Rotated 180deg so it faces BACK initially (relative to container). 
-            When container is rotated 180 (initial state), this face is at 360 (0) -> Visible.
-           ============================== */}
+        {/* ============================== FRONT FACE (Address Side) ============================== */}
         <div
-          className="absolute inset-0 backface-hidden shadow-xl rounded-sm overflow-hidden bg-[#ebe1cf]"
-          style={{ transform: 'rotateY(180deg)' }}
+          className="absolute inset-0 backface-hidden shadow-xl rounded-sm overflow-hidden"
+          style={{
+            transform: 'rotateY(180deg)',
+            backgroundColor: mainColor,
+            willChange: 'transform'
+          }}
           onClick={() => !isFlipped && setIsFlipped(true)}
         >
           {/* Paper Texture */}
           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/paper.png')] mix-blend-multiply pointer-events-none"></div>
 
           {/* Border Element */}
-          <div className="absolute inset-4 border-2 border-[#d4c5a9] opacity-50 pointer-events-none rounded-sm"></div>
+          <div className="absolute inset-4 border-2 opacity-30 pointer-events-none rounded-sm" style={{ borderColor: darkerColor }}></div>
 
           {/* Stamp (Top Right) */}
-          <div className="absolute top-6 right-6 w-24 h-28 transform rotate-3 shadow-sm border border-gray-300 p-1 bg-white">
-            <ImageWithFallback
-              src={stampSrc || "https://images.unsplash.com/photo-1579270031023-b1d56906a246?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400"}
-              alt="Stamp"
-              className="w-full h-full object-cover grayscale-[0.2]"
-            />
+          <div className="absolute top-6 right-6 w-20 h-24 transform rotate-3 shadow-sm border border-gray-300 p-1 bg-white overflow-hidden">
+            {stampSrc ? (
+              <img src={stampSrc} alt="Stamp" className="w-full h-full object-cover" />
+            ) : null}
           </div>
+
           {/* Postmark overlay */}
-          <div className="absolute top-6 right-16 w-20 h-20 opacity-40 mix-blend-multiply pointer-events-none">
-            <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-12">
-              <circle cx="50" cy="50" r="45" fill="none" stroke="#333" strokeWidth="2" strokeDasharray="4 2" />
-              <text x="50" y="55" textAnchor="middle" fontSize="14" fontFamily="serif" fill="#333">LONDON</text>
-            </svg>
-          </div>
+          {postmarkText && (
+            <div className="absolute top-6 right-16 w-20 h-20 opacity-70 mix-blend-multiply pointer-events-none">
+              <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-12">
+                <circle cx="50" cy="50" r="45" fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray="4 2" />
+                <text x="50" y="55" textAnchor="middle" fontSize="14" fontFamily="serif" fontWeight="bold" fill="#2563eb">
+                  {postmarkText}
+                </text>
+              </svg>
+            </div>
+          )}
 
           {/* From Address (Top Left) */}
           <div className="absolute top-8 left-8 text-left opacity-90">
@@ -236,9 +328,10 @@ export function Envelope({
           </div>
 
           {/* To Address (Center) */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center w-3/4">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+            <p className="font-serif text-[#8a7f6b] text-[10px] tracking-widest uppercase mb-1">To:</p>
             <p
-              className={clsx("text-center text-gray-800 tracking-wide leading-relaxed", toFont)}
+              className={clsx("text-[#5c5343] font-medium leading-tight max-w-[200px] whitespace-pre-line", toFont)}
               style={{ fontSize: toSize }}
             >
               {to}
@@ -246,32 +339,20 @@ export function Envelope({
           </div>
 
           {/* Logos (Bottom Corners) */}
-          <div className="absolute bottom-6 left-6 w-14 h-14 opacity-80 mix-blend-multiply filter hover:brightness-90 transition-all">
-            <ImageWithFallback
-              src={logo1Src || "https://images.unsplash.com/photo-1628151016008-25f0a202e86b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200"}
-              alt="Logo 1"
-              className="w-full h-full object-contain"
-            />
+          <div className="absolute bottom-6 left-6 w-14 h-14 overflow-hidden">
+            {logo1Src ? (
+              <img src={logo1Src} alt="Logo 1" className="w-full h-full object-contain" />
+            ) : null}
           </div>
-          <div className="absolute bottom-6 right-6 w-14 h-14 opacity-80 mix-blend-multiply filter hover:brightness-90 transition-all">
-            <ImageWithFallback
-              src={logo2Src || "https://images.unsplash.com/photo-1636955860106-9e1208a54d6a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200"}
-              alt="Logo 2"
-              className="w-full h-full object-contain"
-            />
+          <div className="absolute bottom-6 right-6 w-14 h-14 overflow-hidden">
+            {logo2Src ? (
+              <img src={logo2Src} alt="Logo 2" className="w-full h-full object-contain" />
+            ) : null}
           </div>
         </div>
 
       </motion.div>
 
-      {/* Helper text */}
-      <motion.p
-        className="mt-12 text-gray-400 font-medium tracking-widest uppercase text-xs transition-all duration-300"
-      >
-        {!isFlipped
-          ? "Click envelope to turn over"
-          : (!isOpen ? "Click seal to open" : "")}
-      </motion.p>
     </div>
   );
 }

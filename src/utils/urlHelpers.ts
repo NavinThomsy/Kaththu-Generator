@@ -10,20 +10,25 @@ export interface LetterData {
   animationType: AnimationType;
   font?: string;
   fontSize?: number;
-  
+
   // Envelope Customization
   toText?: string;
   fromText?: string;
   stampImage?: string | null;
+  postmarkText?: string | null;
+  sealSrc?: string | null;
   sealImage?: string | null;
   logo1Src?: string | null;
   logo2Src?: string | null;
   envelopeColor?: string;
+  letterColor?: string;
+  insideEnvelopeColor?: string;
   waxColor?: string;
   toFont?: string;
   toSize?: number;
   fromFont?: string;
   fromSize?: number;
+  animationSpeed?: number;
 }
 
 export function encodeLetterData(data: LetterData): string {
@@ -57,20 +62,20 @@ export function getLetterFromURL(): LetterData | null {
   if (hashMatch) {
     return decodeLetterData(hashMatch[1]);
   }
-  
+
   // Try search params (fallback)
   const searchParams = new URLSearchParams(window.location.search);
   const paramData = searchParams.get('letter');
   if (paramData) {
     return decodeLetterData(paramData);
   }
-  
+
   return null;
 }
 
 export function isViewerMode(): boolean {
   if (window.location.hash.startsWith('#letter=')) return true;
-  
+
   const searchParams = new URLSearchParams(window.location.search);
   return searchParams.has('letter');
 }
