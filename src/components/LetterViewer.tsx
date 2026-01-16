@@ -22,6 +22,12 @@ interface LetterViewerProps {
   toSize?: number;
   fromFont?: string;
   fromSize?: number;
+  envelopeColor?: string;
+  insideEnvelopeColor?: string;
+  letterColor?: string;
+  animationSpeed?: number;
+  sealSrc?: string;
+  postmarkText?: string;
 }
 
 export function LetterViewer({
@@ -38,18 +44,19 @@ export function LetterViewer({
   toFont,
   toSize,
   fromFont,
-  fromSize
+  fromSize,
+  envelopeColor = "#9fadbc",
+  insideEnvelopeColor = "#ebe1cf",
+  letterColor = "#ffffff",
+  animationSpeed = 5,
+  sealSrc,
+  postmarkText
 }: LetterViewerProps) {
   const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-8">
       <div className="w-full max-w-2xl">
-        {!isEnvelopeOpen && (
-          <p className="text-center text-gray-600 mb-6">
-            Click the envelope to open your letter
-          </p>
-        )}
 
         <div className="relative min-h-[500px] flex items-center justify-center">
           {/* Backdrop for clicking outside to close */}
@@ -74,14 +81,22 @@ export function LetterViewer({
               toSize={toSize}
               fromFont={fromFont}
               fromSize={fromSize}
+              paperColor={envelopeColor}
+              insideEnvelopeColor={insideEnvelopeColor}
+              letterColor={letterColor}
+              sealSrc={sealSrc}
+              postmarkText={postmarkText}
             >
               <div className="h-full overflow-auto">
                 <AnimatedText
+                  key={String(isEnvelopeOpen)}
                   text={text}
                   animationType={animationType}
                   formatting={formatting}
                   font={font}
                   fontSize={fontSize}
+                  delay={1.5}
+                  animationSpeed={animationSpeed}
                 />
               </div>
             </Envelope>
