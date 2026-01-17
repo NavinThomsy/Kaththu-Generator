@@ -15,6 +15,7 @@ export interface EnvelopeProps {
   stampSrc?: string;
   logo1Src?: string;
   logo2Src?: string;
+  postmarkSrc?: string;
   toFont?: string;
   toSize?: number;
   fromFont?: string;
@@ -66,6 +67,7 @@ export function Envelope({
   insideEnvelopeColor = "#ebe1cf",
   letterColor = "#ffffff",
   sealSrc,
+  postmarkSrc,
   postmarkText = "LONDON"
 }: EnvelopeProps) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -305,14 +307,37 @@ export function Envelope({
           </div>
 
           {/* Postmark overlay */}
-          {postmarkText && (
-            <div className="absolute top-6 right-16 w-20 h-20 opacity-70 mix-blend-multiply pointer-events-none">
-              <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-12">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray="4 2" />
-                <text x="50" y="55" textAnchor="middle" fontSize="14" fontFamily="serif" fontWeight="bold" fill="#2563eb">
-                  {postmarkText}
-                </text>
-              </svg>
+          {(postmarkText || postmarkSrc) && (
+            <div className="absolute top-6 right-16 w-32 h-20 opacity-80 mix-blend-multiply pointer-events-none overflow-visible">
+              {postmarkSrc ? (
+                <img src={postmarkSrc} alt="Postmark" className="w-full h-full object-contain transform -rotate-12" />
+              ) : (
+                <svg viewBox="0 0 160 100" className="w-full h-full transform -rotate-6">
+                  {/* Outer Ring */}
+                  <circle cx="50" cy="50" r="45" fill="none" stroke="#2563eb" strokeWidth="2" />
+                  {/* Inner Ring */}
+                  <circle cx="50" cy="50" r="30" fill="none" stroke="#2563eb" strokeWidth="1" />
+
+                  {/* Text curved path */}
+                  <path id="curve" d="M 18 50 A 32 32 0 1 1 82 50" fill="none" />
+                  <text fontSize="11" fontFamily="serif" fontWeight="bold" fill="#2563eb" letterSpacing="1">
+                    <textPath href="#curve" startOffset="50%" textAnchor="middle">
+                      {postmarkText || "ROYAL MAIL"}
+                    </textPath>
+                  </text>
+
+                  {/* Date/Location center text */}
+                  <text x="50" y="55" textAnchor="middle" fontSize="10" fontFamily="serif" fill="#2563eb">
+                    2024
+                  </text>
+
+                  {/* Wavy Cancellation Lines */}
+                  <path d="M 95 30 Q 110 20 125 30 T 155 30" fill="none" stroke="#2563eb" strokeWidth="2" />
+                  <path d="M 95 45 Q 110 35 125 45 T 155 45" fill="none" stroke="#2563eb" strokeWidth="2" />
+                  <path d="M 95 60 Q 110 50 125 60 T 155 60" fill="none" stroke="#2563eb" strokeWidth="2" />
+                  <path d="M 95 75 Q 110 65 125 75 T 155 75" fill="none" stroke="#2563eb" strokeWidth="2" />
+                </svg>
+              )}
             </div>
           )}
 
@@ -338,8 +363,9 @@ export function Envelope({
             </p>
           </div>
 
-          {/* Logos (Bottom Corners) */}
-          <div className="absolute bottom-6 left-6 w-14 h-14 overflow-hidden">
+          {/* Logos */}
+          {/* Logo 1 (Top Right below Stamp) - Size w-20 h-20, tilted -5deg */}
+          <div className="absolute w-20 h-20 overflow-visible" style={{ top: '100px', right: '1.5rem', transform: 'rotate(-5deg)' }}>
             {logo1Src ? (
               <img src={logo1Src} alt="Logo 1" className="w-full h-full object-contain" />
             ) : null}
