@@ -14,11 +14,11 @@ import {
   isViewerMode,
 } from "./utils/urlHelpers";
 // @ts-ignore
-import waxSealImage from "./assets/Navin Logo Wax Seal (1).png";
+import waxSealImage from "./assets/Navin Logo Wax Seal.png";
 // @ts-ignore
 import stampImage from "./assets/Stamp.png";
 // @ts-ignore
-import logo1Image from "./assets/Logo 1.jpg";
+import logo1Image from "./assets/Logo 1.png";
 
 const DEFAULT_IMAGES = {
   STAMP: stampImage,
@@ -62,7 +62,7 @@ export default function App() {
 
   const [envelopeColor, setEnvelopeColor] = useState(() => {
     const data = getLetterFromURL();
-    return data?.envelopeColor || "#f0f5ff";
+    return data?.envelopeColor || "#eceada";
   });
 
   const [letterColor, setLetterColor] = useState(() => {
@@ -72,7 +72,7 @@ export default function App() {
 
   const [insideEnvelopeColor, setInsideEnvelopeColor] = useState(() => {
     const data = getLetterFromURL();
-    return data?.insideEnvelopeColor || "#f5eee0";
+    return data?.insideEnvelopeColor || "#966d1d";
   });
 
   // --- Envelope State ---
