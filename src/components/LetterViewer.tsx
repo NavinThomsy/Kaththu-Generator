@@ -49,6 +49,13 @@ export function LetterViewer({
   postmarkSrc, // Added postmarkSrc
 }: LetterViewerProps) {
   const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
+  const [resetKey, setResetKey] = useState(0);
+
+  const handleReset = () => {
+    setIsEnvelopeOpen(false);
+    // Force remount to skip closing animation
+    setTimeout(() => setResetKey(prev => prev + 1), 100);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-8">
@@ -59,12 +66,13 @@ export function LetterViewer({
           {isEnvelopeOpen && (
             <div
               className="fixed inset-0 z-40 cursor-default"
-              onClick={() => setIsEnvelopeOpen(false)}
+              onClick={handleReset}
             />
           )}
 
           <div className="relative z-50 w-full flex justify-center">
             <Envelope
+              key={resetKey}
               onOpen={() => setIsEnvelopeOpen(true)}
               onClose={() => setIsEnvelopeOpen(false)}
               isOpen={isEnvelopeOpen}
@@ -83,17 +91,15 @@ export function LetterViewer({
               sealSrc={sealSrc}
               postmarkText={postmarkText}
             >
-              <div className="h-full overflow-auto">
-                <AnimatedText
-                  key={String(isEnvelopeOpen)}
-                  text={text}
-                  animationType={animationType}
-                  font={font}
-                  fontSize={fontSize}
-                  delay={1.5}
-                  animationSpeed={animationSpeed}
-                />
-              </div>
+              <AnimatedText
+                key={String(isEnvelopeOpen)}
+                text={text}
+                animationType={animationType}
+                font={font}
+                fontSize={fontSize}
+                delay={1.5}
+                animationSpeed={animationSpeed}
+              />
             </Envelope>
           </div>
         </div>

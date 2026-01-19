@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
 import { PaperTexture } from '@paper-design/shaders-react';
@@ -71,6 +71,75 @@ export function Envelope({
   postmarkText = "LONDON"
 }: EnvelopeProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Allow scrolling from outside the container when open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let destination = scrollRef.current?.scrollTop || 0;
+    let isAnimating = false;
+    let rafId: number;
+
+    const smoothScroll = () => {
+      if (!scrollRef.current) return;
+      const current = scrollRef.current.scrollTop;
+      const diff = destination - current;
+
+      if (Math.abs(diff) < 1) {
+        scrollRef.current.scrollTop = destination;
+        isAnimating = false;
+        return;
+      }
+
+      // Linear interpolation (lerp) for smoothness
+      scrollRef.current.scrollTop = current + diff * 0.15;
+      rafId = requestAnimationFrame(smoothScroll);
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      // If the scroll target is NOT inside our scroll container (and not its child), manual scroll
+      if (scrollRef.current && !scrollRef.current.contains(e.target as Node)) {
+        // Prevent default only if we are handling it? actually native scroll is fine on body usually.
+        // But we want to 'capture' it.
+
+        // Sync destination if not animating (e.g. after a native scroll interaction)
+        if (!isAnimating && scrollRef.current) {
+          destination = scrollRef.current.scrollTop;
+        }
+
+        destination += e.deltaY;
+
+        // Clamp destination
+        if (scrollRef.current) {
+          const maxScroll = scrollRef.current.scrollHeight - scrollRef.current.clientHeight;
+          destination = Math.max(0, Math.min(destination, maxScroll));
+        }
+
+        if (!isAnimating) {
+          isAnimating = true;
+          rafId = requestAnimationFrame(smoothScroll);
+        }
+      }
+    };
+
+    // Listen for native scroll to keep destination in sync
+    const handleNativeScroll = () => {
+      if (!isAnimating && scrollRef.current) {
+        destination = scrollRef.current.scrollTop;
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    const box = scrollRef.current;
+    if (box) box.addEventListener('scroll', handleNativeScroll);
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      if (box) box.removeEventListener('scroll', handleNativeScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, [isOpen]);
 
   // Derive colors - memoize if possible, but simple enough for now
   const mainColor = paperColor;
@@ -82,7 +151,7 @@ export function Envelope({
     } else {
       const timer = setTimeout(() => {
         setIsFlipped(false);
-      }, 500);
+      }, 800); // Wait for flap to fully close (0.8s) before flipping
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
@@ -92,7 +161,7 @@ export function Envelope({
 
       {/* 3D Envelope Container - moves down when letter rises */}
       <motion.div
-        className="relative w-full aspect-[1.5] group cursor-pointer"
+        className="relative w-full aspect-[1.5] group cursor-pointer select-none"
         style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
         animate={{
           rotateY: isFlipped ? 0 : 180,
@@ -104,20 +173,32 @@ export function Envelope({
         }}
         onClick={() => !isFlipped && setIsFlipped(true)}
       >
-        {/* Edge spines to hide gap during rotation */}
+        {/* Edge spines to hide gap during rotation - thickened to cover full 20px depth */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-1 rounded-l-sm"
+          className="absolute left-0 top-0 bottom-0 rounded-l-sm"
           style={{
-            transform: 'translateX(-50%) rotateY(90deg)',
-            transformOrigin: 'right center',
+            width: '20px',
+            transform: 'rotateY(-90deg)',
+            transformOrigin: 'left center',
             backgroundColor: mainColor
           }}
         />
         <div
-          className="absolute right-0 top-0 bottom-0 w-1 rounded-r-sm"
+          className="absolute right-0 top-0 bottom-0 rounded-r-sm"
           style={{
-            transform: 'translateX(50%) rotateY(-90deg)',
-            transformOrigin: 'left center',
+            width: '20px',
+            transform: 'rotateY(90deg)',
+            transformOrigin: 'right center',
+            backgroundColor: mainColor
+          }}
+        />
+        {/* Top Spine to cover the hinge gap - Solid "Roof" */}
+        <div
+          className="absolute top-0 left-0 right-0 rounded-t-sm"
+          style={{
+            height: '20px',
+            transform: 'rotateX(90deg)',
+            transformOrigin: 'top center',
             backgroundColor: mainColor
           }}
         />
@@ -125,10 +206,16 @@ export function Envelope({
         {/* ============================== BACK FACE (Flap/Pocket Side) ============================== */}
         <div className="absolute inset-0 backface-hidden" style={{ transform: 'rotateY(0deg)', transformStyle: 'preserve-3d' }}>
 
-          {/* 1. Inside Back of Envelope (z=0) */}
+          {/* 1. Inside Back of Envelope (z=0) - Base layer matches spines */}
           <div
             className="absolute inset-0 shadow-xl rounded-sm backface-hidden"
-            style={{ transform: 'translateZ(0px)', backgroundColor: darkerColor }}
+            style={{ transform: 'translateZ(0px)', backgroundColor: mainColor }}
+          />
+
+          {/* 1b. Inner colored layer - visible interior */}
+          <div
+            className="absolute inset-[2px] rounded-sm backface-hidden"
+            style={{ transform: 'translateZ(0.5px)', backgroundColor: darkerColor }}
           />
 
           {/* 2. The Letter */}
@@ -194,15 +281,29 @@ export function Envelope({
               />
             </div>
 
-            {/* User Logo (Top Right) */}
-            <div
-              className="absolute top-6 right-8 w-5 h-5 opacity-80 mix-blend-multiply z-20"
-              style={{ width: '20px', height: '20px' }}
-            >
-              <img src={navinLogo} alt="Logo" className="w-full h-full object-contain" />
-            </div>
+            {/* Custom Scrollbar Styles */}
+            <style>{`
+              .custom-scrollbar::-webkit-scrollbar {
+                display: none;
+              }
+              .custom-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+            `}</style>
+            <div ref={scrollRef} className="custom-scrollbar relative z-10 h-full overflow-y-auto pr-2">
+              {/* User Logo (In Flow) - mb-6 for more gap, opacity-100 for visibility */}
+              <div
+                className="relative mt-4 ml-6 mb-6 w-10 h-10 mix-blend-multiply z-20"
+                style={{ width: '40px', height: '40px' }}
+              >
+                <img src={navinLogo} alt="Logo" className="w-full h-full object-contain" />
+              </div>
 
-            <div className="relative z-10 h-full overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pr-2 pt-2">{children}</div>
+              <div className="pl-6 md:pl-8">
+                {children}
+              </div>
+            </div>
           </motion.div>
 
           {/* 3. Envelope Pocket (Front Flaps) - (z=20) */}
@@ -238,12 +339,22 @@ export function Envelope({
             initial="closed"
             animate={isOpen ? "open" : "closed"}
             variants={{
-              closed: { rotateX: 0, z: 30 },
-              open: { rotateX: 180, z: 0 }
-            }}
-            transition={{
-              rotateX: { duration: 0.8, type: "spring", stiffness: 60, damping: 12 },
-              z: { delay: 0.2 }
+              closed: {
+                rotateX: 0,
+                z: 22,
+                transition: {
+                  rotateX: { duration: 0.8, type: "spring", stiffness: 60, damping: 12 },
+                  z: { duration: 0 } // Snap instantly to clearance height on close
+                }
+              },
+              open: {
+                rotateX: 180,
+                z: 0,
+                transition: {
+                  rotateX: { duration: 0.8, type: "spring", stiffness: 60, damping: 12 },
+                  z: { delay: 0.1, duration: 0.3 } // Wait slightly before dropping Z on open
+                }
+              }
             }}
           >
             {/* Front of Flap (Closed state) */}
@@ -261,10 +372,16 @@ export function Envelope({
 
               {/* Wax Seal - CENTERED at 50% */}
               <motion.div
-                className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 pointer-events-auto cursor-pointer"
+                className="absolute top-[50%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 pointer-events-auto cursor-pointer z-[100]"
+                style={{ transform: 'translateZ(5px)' }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
-                animate={{ opacity: isOpen ? 0 : 1 }}
+                initial="closed"
+                animate={isOpen ? "open" : "closed"}
+                variants={{
+                  closed: { opacity: 1, transition: { delay: 1.6, duration: 0.4 } },
+                  open: { opacity: 0, transition: { duration: 0 } }
+                }}
               >
                 {sealSrc ? (
                   <img src={sealSrc} alt="Wax Seal" className="w-full h-full object-contain" style={{ filter: 'drop-shadow(2px 3px 4px rgba(0,0,0,0.4))' }} />
@@ -274,12 +391,24 @@ export function Envelope({
               </motion.div>
             </div>
 
-            {/* Back of Flap (Open state) */}
-            <div className="absolute inset-0 backface-hidden" style={{ transform: 'rotateY(180deg)' }}>
-              <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                <path d="M0,0 L100,0 L50,55 Z" fill={darkerColor} />
+            {/* Back of Flap (Open state) - Geometrically inset path + Opacity toggle to prevent bleeding */}
+            <motion.div
+              className="absolute inset-0 backface-hidden"
+              style={{ transform: 'rotateY(180deg)' }}
+              variants={{
+                closed: { opacity: 0, transition: { delay: 0.8, duration: 0 } },
+                open: { opacity: 1, transition: { duration: 0 } }
+              }}
+            >
+              <svg
+                className="w-full h-full"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+              >
+                {/* Inset coordinates: 0->0.5, 100->99.5, 55->54.5 (slightly smaller triangle) */}
+                <path d="M0.5,0 L99.5,0 L50,54.5 Z" fill={darkerColor} />
               </svg>
-            </div>
+            </motion.div>
           </motion.div>
         </div>
 
@@ -287,7 +416,7 @@ export function Envelope({
         <div
           className="absolute inset-0 backface-hidden shadow-xl rounded-sm overflow-hidden"
           style={{
-            transform: 'rotateY(180deg)',
+            transform: 'rotateY(180deg) translateZ(20px)', // Match pocket depth (20px) to close the box gap
             backgroundColor: mainColor,
             willChange: 'transform'
           }}

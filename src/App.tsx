@@ -837,16 +837,14 @@ export default function App() {
                     sealSrc={sealSrc}
 
                   >
-                    <div className="h-full overflow-auto">
-                      <AnimatedText
-                        key={String(isEnvelopeOpen)} // Reset animation on open
-                        text={text}
-                        animationType={animationType}
-                        font={letterFont}
-                        fontSize={letterSize}
-                        delay={1.5}
-                      />
-                    </div>
+                    <AnimatedText
+                      key={String(isEnvelopeOpen)} // Reset animation on open
+                      text={text}
+                      animationType={animationType}
+                      font={letterFont}
+                      fontSize={letterSize}
+                      delay={1.5}
+                    />
                   </Envelope>
                 </div>
               </div>
