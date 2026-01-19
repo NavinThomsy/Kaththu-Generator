@@ -14,12 +14,16 @@ import {
   isViewerMode,
 } from "./utils/urlHelpers";
 // @ts-ignore
-import waxSealImage from "./assets/Navin Logo Wax Seal (1).png";
+import waxSealImage from "./assets/Navin Logo Wax Seal.png";
+// @ts-ignore
+import stampImage from "./assets/Stamp.png";
+// @ts-ignore
+import logo1Image from "./assets/Logo 1.png";
 
 const DEFAULT_IMAGES = {
-  STAMP: "https://images.unsplash.com/photo-1767869168428-910a487a11b0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
+  STAMP: stampImage,
   SEAL: waxSealImage,
-  LOGO1: "https://images.unsplash.com/photo-1584730536820-afc026d810cf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200",
+  LOGO1: logo1Image,
   LOGO2: "https://images.unsplash.com/photo-1767695086479-869f10facf90?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200"
 };
 
@@ -34,16 +38,6 @@ export default function App() {
     return data
       ? data.text
       : "Hello World \n\nBest,\nNavin Thomsy";
-  });
-  const [formatting, setFormatting] = useState(() => {
-    const data = getLetterFromURL();
-    return data
-      ? data.formatting
-      : {
-        bold: false,
-        italic: false,
-        underline: false,
-      };
   });
   const [animationType, setAnimationType] =
     useState<AnimationType>(() => {
@@ -68,7 +62,7 @@ export default function App() {
 
   const [envelopeColor, setEnvelopeColor] = useState(() => {
     const data = getLetterFromURL();
-    return data?.envelopeColor || "#f0f5ff";
+    return data?.envelopeColor || "#eceada";
   });
 
   const [letterColor, setLetterColor] = useState(() => {
@@ -78,7 +72,7 @@ export default function App() {
 
   const [insideEnvelopeColor, setInsideEnvelopeColor] = useState(() => {
     const data = getLetterFromURL();
-    return data?.insideEnvelopeColor || "#f5eee0";
+    return data?.insideEnvelopeColor || "#966d1d";
   });
 
   // --- Envelope State ---
@@ -113,6 +107,10 @@ export default function App() {
   const [logo1Src, setLogo1Src] = useState(() => {
     const data = getLetterFromURL();
     return data ? (data.logo1Src || "") : DEFAULT_IMAGES.LOGO1;
+  });
+  const [postmarkSrc, setPostmarkSrc] = useState(() => {
+    const data = getLetterFromURL();
+    return data ? (data.postmarkSrc || "") : "";
   });
   const [postmarkText, setPostmarkText] = useState(() => {
     const data = getLetterFromURL();
@@ -184,7 +182,6 @@ export default function App() {
         const letterData = getLetterFromURL();
         if (letterData) {
           setText(letterData.text);
-          setFormatting(letterData.formatting);
           setAnimationType(letterData.animationType);
           setLetterFont(letterData.font || "font-sans");
           setLetterSize(letterData.fontSize || 16);
@@ -248,7 +245,6 @@ export default function App() {
     // 1. Create URL
     const url = createPublishedURL({
       text,
-      formatting,
       animationType,
       font: letterFont,
       fontSize: letterSize,
@@ -256,6 +252,7 @@ export default function App() {
       fromText: from,
       stampImage: stampSrc,
       postmarkText,
+      postmarkSrc,
       logo1Src,
       logo2Src,
       toFont,
@@ -305,7 +302,6 @@ export default function App() {
       <>
         <LetterViewer
           text={text}
-          formatting={formatting}
           animationType={animationType}
           font={letterFont}
           fontSize={letterSize}
@@ -314,6 +310,7 @@ export default function App() {
           stampImage={stampSrc}
           logo1Src={logo1Src}
           logo2Src={logo2Src}
+          postmarkSrc={postmarkSrc}
           toFont={toFont}
           toSize={toSize}
           fromFont={fromFont}
@@ -375,8 +372,6 @@ export default function App() {
                   <TextEditor
                     value={text}
                     onChange={setText}
-                    formatting={formatting}
-                    onFormattingChange={setFormatting}
                   />
 
                   <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-4">
@@ -533,66 +528,68 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Envelope Color */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Envelope Color
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={envelopeColor}
-                          onChange={(e) => setEnvelopeColor(e.target.value)}
-                          className="w-10 h-10 p-0 rounded cursor-pointer border-0"
-                        />
-                        <input
-                          type="text"
-                          value={envelopeColor}
-                          onChange={(e) => setEnvelopeColor(e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 text-gray-800 text-sm"
-                        />
+                    <div className="flex w-full gap-2">
+                      {/* Envelope Color */}
+                      <div className="flex-1 min-w-0 flex flex-col gap-1">
+                        <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wider truncate" title="Envelope Color">
+                          Envelope
+                        </label>
+                        <div className="flex gap-1">
+                          <input
+                            type="color"
+                            value={envelopeColor}
+                            onChange={(e) => setEnvelopeColor(e.target.value)}
+                            className="w-8 h-8 p-0 rounded cursor-pointer border-0 flex-shrink-0"
+                          />
+                          <input
+                            type="text"
+                            value={envelopeColor}
+                            onChange={(e) => setEnvelopeColor(e.target.value)}
+                            className="w-full min-w-0 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-gray-200 text-gray-800 text-xs"
+                          />
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Letter Color */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Letter Color
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={letterColor}
-                          onChange={(e) => setLetterColor(e.target.value)}
-                          className="w-10 h-10 p-0 rounded cursor-pointer border-0"
-                        />
-                        <input
-                          type="text"
-                          value={letterColor}
-                          onChange={(e) => setLetterColor(e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 text-gray-800 text-sm"
-                        />
+                      {/* Letter Color */}
+                      <div className="flex-1 min-w-0 flex flex-col gap-1">
+                        <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wider truncate" title="Letter Color">
+                          Letter
+                        </label>
+                        <div className="flex gap-1">
+                          <input
+                            type="color"
+                            value={letterColor}
+                            onChange={(e) => setLetterColor(e.target.value)}
+                            className="w-8 h-8 p-0 rounded cursor-pointer border-0 flex-shrink-0"
+                          />
+                          <input
+                            type="text"
+                            value={letterColor}
+                            onChange={(e) => setLetterColor(e.target.value)}
+                            className="w-full min-w-0 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-gray-200 text-gray-800 text-xs"
+                          />
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Inside Envelope Color */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Inside Envelope Color
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={insideEnvelopeColor}
-                          onChange={(e) => setInsideEnvelopeColor(e.target.value)}
-                          className="w-10 h-10 p-0 rounded cursor-pointer border-0"
-                        />
-                        <input
-                          type="text"
-                          value={insideEnvelopeColor}
-                          onChange={(e) => setInsideEnvelopeColor(e.target.value)}
-                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 text-gray-800 text-sm"
-                        />
+                      {/* Inside Envelope Color */}
+                      <div className="flex-1 min-w-0 flex flex-col gap-1">
+                        <label className="text-[10px] font-medium text-gray-500 uppercase tracking-wider truncate" title="Inside Color">
+                          Inside
+                        </label>
+                        <div className="flex gap-1">
+                          <input
+                            type="color"
+                            value={insideEnvelopeColor}
+                            onChange={(e) => setInsideEnvelopeColor(e.target.value)}
+                            className="w-8 h-8 p-0 rounded cursor-pointer border-0 flex-shrink-0"
+                          />
+                          <input
+                            type="text"
+                            value={insideEnvelopeColor}
+                            onChange={(e) => setInsideEnvelopeColor(e.target.value)}
+                            className="w-full min-w-0 px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-gray-200 text-gray-800 text-xs"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -610,8 +607,8 @@ export default function App() {
                           <div>
                             <div className="flex items-center justify-between mb-1">
                               <label className="text-[10px] text-gray-400">Stamp Image</label>
-                              <div className="flex items-center gap-1.5">
-                                <label className="text-[9px] text-gray-500 cursor-pointer select-none">Show</label>
+                              <div className="flex items-center gap-2">
+                                <label className="text-[10px] text-gray-500 cursor-pointer select-none leading-none pt-[2px]">Show</label>
                                 <input
                                   type="checkbox"
                                   checked={!!stampSrc}
@@ -629,6 +626,19 @@ export default function App() {
                             />
                           </div>
 
+                          {/* Wax Seal */}
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-[10px] text-gray-400">Wax Seal Image</label>
+                            </div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleImageUpload(e, setSealSrc)}
+                              className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+
                           {/* Postmark */}
                           <div>
                             <label className="block text-[10px] text-gray-400 mb-1">
@@ -639,53 +649,28 @@ export default function App() {
                               value={postmarkText}
                               onChange={(e) => setPostmarkText(e.target.value)}
                               placeholder="e.g. LONDON"
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 text-gray-800 text-sm"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-200 text-gray-800 text-sm mb-2"
                             />
-                          </div>
 
-                          {/* Wax Seal */}
-                          <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className="text-[10px] text-gray-400">Wax Seal Image</label>
-                              {/* Seal technically needs to exist for interaction, so "hiding" it reverts to SVG in Envelope? 
-                                  Wait, prompt said: allow user to not have image (as in no defaults). 
-                                  If I uncheck this, I will set sealSrc to "". Envelope renders default SVG if ""?
-                                  No, user wants "no defaults" for uploaded images. 
-                                  Actually, the Envelope.tsx logic I wrote earlier: if sealSrc, show IMG, else show SVG.
-                                  So "removing" the image just shows the default SVG. 
-                                  BUT user gave a specific default image. So "Default" is now the IMAGE.
-                                  So "Removing" it should perhaps hide it? But click target?
-                                  Let's assume unchecking sets it to empty string.
-                                  And let's update Envelope.tsx to handle "no image at all" if possible?
-                                  Or maybe unchecking just removes the *custom* (or default) image and shows the raw SVG?
-                                  "Allow the users to not have image".
-                                  I will stick to: Unchecked = empty string. 
-                              */}
-                              <div className="flex items-center gap-1.5">
-                                <label className="text-[9px] text-gray-500 cursor-pointer select-none">Show</label>
-                                <input
-                                  type="checkbox"
-                                  checked={!!sealSrc}
-                                  onChange={(e) => setSealSrc(e.target.checked ? DEFAULT_IMAGES.SEAL : "")}
-                                  className="w-3 h-3 rounded text-gray-800 focus:ring-gray-300 border-gray-300"
-                                />
-                              </div>
+                              <label className="text-[10px] text-gray-400">Postmark Image (Optional)</label>
                             </div>
                             <input
                               type="file"
                               accept="image/*"
-                              disabled={!sealSrc}
-                              onChange={(e) => handleImageUpload(e, setSealSrc)}
-                              className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onChange={(e) => handleImageUpload(e, setPostmarkSrc)}
+                              className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                             />
                           </div>
+
+
 
                           {/* Logo 1 */}
                           <div>
                             <div className="flex items-center justify-between mb-1">
-                              <label className="text-[10px] text-gray-400">Bottom Left Logo</label>
-                              <div className="flex items-center gap-1.5">
-                                <label className="text-[9px] text-gray-500 cursor-pointer select-none">Show</label>
+                              <label className="text-[10px] text-gray-400">Top Right Logo</label>
+                              <div className="flex items-center gap-2">
+                                <label className="text-[10px] text-gray-500 cursor-pointer select-none leading-none pt-[2px]">Show</label>
                                 <input
                                   type="checkbox"
                                   checked={!!logo1Src}
@@ -707,8 +692,8 @@ export default function App() {
                           <div>
                             <div className="flex items-center justify-between mb-1">
                               <label className="text-[10px] text-gray-400">Bottom Right Logo</label>
-                              <div className="flex items-center gap-1.5">
-                                <label className="text-[9px] text-gray-500 cursor-pointer select-none">Show</label>
+                              <div className="flex items-center gap-2">
+                                <label className="text-[10px] text-gray-500 cursor-pointer select-none leading-none pt-[2px]">Show</label>
                                 <input
                                   type="checkbox"
                                   checked={!!logo2Src}
@@ -840,6 +825,8 @@ export default function App() {
                     stampSrc={stampSrc}
                     logo1Src={logo1Src}
                     logo2Src={logo2Src}
+                    postmarkSrc={postmarkSrc}
+                    postmarkText={postmarkText}
                     toFont={toFont}
                     toSize={toSize}
                     fromFont={fromFont}
@@ -848,14 +835,13 @@ export default function App() {
                     insideEnvelopeColor={insideEnvelopeColor}
                     letterColor={letterColor}
                     sealSrc={sealSrc}
-                    postmarkText={postmarkText}
+
                   >
                     <div className="h-full overflow-auto">
                       <AnimatedText
                         key={String(isEnvelopeOpen)} // Reset animation on open
                         text={text}
                         animationType={animationType}
-                        formatting={formatting}
                         font={letterFont}
                         fontSize={letterSize}
                         delay={1.5}

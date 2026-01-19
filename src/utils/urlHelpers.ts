@@ -2,11 +2,6 @@ import { AnimationType } from '../components/AnimatedText';
 
 export interface LetterData {
   text: string;
-  formatting: {
-    bold: boolean;
-    italic: boolean;
-    underline: boolean;
-  };
   animationType: AnimationType;
   font?: string;
   fontSize?: number;
@@ -16,6 +11,7 @@ export interface LetterData {
   fromText?: string;
   stampImage?: string | null;
   postmarkText?: string | null;
+  postmarkSrc?: string | null;
   sealSrc?: string | null;
   sealImage?: string | null;
   logo1Src?: string | null;

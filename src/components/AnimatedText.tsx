@@ -7,11 +7,6 @@ export type AnimationType = 'fade-in' | 'word-by-word' | 'character-by-character
 interface AnimatedTextProps {
   text: string;
   animationType: AnimationType;
-  formatting: {
-    bold: boolean;
-    italic: boolean;
-    underline: boolean;
-  };
   font?: string;
   fontSize?: number;
   delay?: number; // Delay in seconds before animation starts
@@ -21,7 +16,6 @@ interface AnimatedTextProps {
 export const AnimatedText = React.memo(({
   text,
   animationType,
-  formatting,
   font = "font-sans",
   fontSize = 16,
   delay = 0,
@@ -56,16 +50,13 @@ export const AnimatedText = React.memo(({
         return () => clearTimeout(timeout);
       }
     }
-  }, [currentIndex, text, animationType, isDelayedStart]);
+  }, [currentIndex, text, animationType, isDelayedStart, animationSpeed]);
 
   const textStyle = {
-    fontWeight: formatting.bold ? 'bold' : 'normal',
-    fontStyle: formatting.italic ? 'italic' : 'normal',
-    textDecoration: formatting.underline ? 'underline' : 'none',
     fontSize: fontSize
   };
 
-  const containerClass = clsx("whitespace-pre-wrap", font);
+  const containerClass = clsx("whitespace-pre-wrap prose prose-sm max-w-none", font);
 
   if (!isDelayedStart && animationType === 'typewriter') {
     return <div className={containerClass} style={textStyle}></div>;
@@ -79,9 +70,8 @@ export const AnimatedText = React.memo(({
         transition={{ duration: 1.5 / (animationSpeed / 5), delay: delay }}
         className={containerClass}
         style={textStyle}
-      >
-        {text}
-      </motion.div>
+        dangerouslySetInnerHTML={{ __html: text }}
+      />
     );
   }
 
@@ -138,7 +128,8 @@ export const AnimatedText = React.memo(({
     );
   }
 
-  return <div className={containerClass} style={textStyle}>{text}</div>;
+  // For other animation types, render HTML directly without animation for now
+  return <div className={containerClass} style={textStyle} dangerouslySetInnerHTML={{ __html: text }} />;
 });
 
 AnimatedText.displayName = 'AnimatedText';

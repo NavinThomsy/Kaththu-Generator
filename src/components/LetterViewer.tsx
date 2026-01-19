@@ -4,11 +4,6 @@ import { AnimatedText, AnimationType } from './AnimatedText';
 
 interface LetterViewerProps {
   text: string;
-  formatting: {
-    bold: boolean;
-    italic: boolean;
-    underline: boolean;
-  };
   animationType: AnimationType;
   font?: string;
   fontSize?: number;
@@ -28,11 +23,11 @@ interface LetterViewerProps {
   animationSpeed?: number;
   sealSrc?: string;
   postmarkText?: string;
+  postmarkSrc?: string | null; // Added postmarkSrc
 }
 
 export function LetterViewer({
   text,
-  formatting,
   animationType,
   font = "font-sans",
   fontSize = 16,
@@ -50,7 +45,8 @@ export function LetterViewer({
   letterColor = "#ffffff",
   animationSpeed = 5,
   sealSrc,
-  postmarkText
+  postmarkText,
+  postmarkSrc, // Added postmarkSrc
 }: LetterViewerProps) {
   const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
 
@@ -92,7 +88,6 @@ export function LetterViewer({
                   key={String(isEnvelopeOpen)}
                   text={text}
                   animationType={animationType}
-                  formatting={formatting}
                   font={font}
                   fontSize={fontSize}
                   delay={1.5}
