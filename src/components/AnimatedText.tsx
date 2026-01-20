@@ -117,13 +117,6 @@ export const AnimatedText = React.memo(({
     return (
       <div className={containerClass} style={textStyle}>
         {displayedText}
-        <motion.span
-          animate={{ opacity: [1, 0] }}
-          transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
-          className="inline-block"
-        >
-          |
-        </motion.span>
       </div>
     );
   }
