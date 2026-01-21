@@ -2019,3 +2019,18 @@ html {
   inherits: false;
   initial-value: 1;
 }
+
+/* Custom Purple Button Class to fix JIT issues */
+.btn-purple {
+  background-color: #6A00FF;
+  color: white;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+.btn-purple:hover {
+  background-color: #5a00d6;
+}
+.btn-purple:active {
+  transform: scale(0.95);
+}

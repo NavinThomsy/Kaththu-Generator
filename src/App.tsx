@@ -28,6 +28,13 @@ const DEFAULT_IMAGES = {
     LOGO2: "https://images.unsplash.com/photo-1767695086479-869f10facf90?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200"
 };
 
+const DEFAULT_FILENAMES = {
+    STAMP: "Stamp.png",
+    SEAL: "Wax Seal.png",
+    LOGO1: "Logo 1.png",
+    LOGO2: "Logo 2.png"
+};
+
 export default function App() {
     const [viewMode, setViewMode] = useState(() =>
         isViewerMode(),
@@ -117,10 +124,18 @@ export default function App() {
         const data = getLetterFromURL();
         return data?.postmarkText ?? "LONDON";
     });
-    const [logo2Src, setLogo2Src] = useState(() => {
-        const data = getLetterFromURL();
-        return data ? (data.logo2Src || "") : DEFAULT_IMAGES.LOGO2;
-    });
+    const [logo2Src, setLogo2Src] = useState(DEFAULT_IMAGES.LOGO2);
+
+    // Filenames & Visibility
+    const [stampFilename, setStampFilename] = useState(DEFAULT_FILENAMES.STAMP);
+    const [sealFilename, setSealFilename] = useState(DEFAULT_FILENAMES.SEAL);
+    const [logo1Filename, setLogo1Filename] = useState(DEFAULT_FILENAMES.LOGO1);
+    const [logo2Filename, setLogo2Filename] = useState(DEFAULT_FILENAMES.LOGO2);
+
+    const [hideStamp, setHideStamp] = useState(false);
+    const [hideSeal, setHideSeal] = useState(false);
+    const [hideLogo1, setHideLogo1] = useState(false);
+    const [hideLogo2, setHideLogo2] = useState(false);
 
     const [toFont, setToFont] = useState(() => {
         const data = getLetterFromURL();
@@ -428,6 +443,22 @@ export default function App() {
                                 onLogo1SrcChange={setLogo1Src}
                                 logo2Src={logo2Src}
                                 onLogo2SrcChange={setLogo2Src}
+                                stampFilename={stampFilename}
+                                onStampFilenameChange={setStampFilename}
+                                sealFilename={sealFilename}
+                                onSealFilenameChange={setSealFilename}
+                                logo1Filename={logo1Filename}
+                                onLogo1FilenameChange={setLogo1Filename}
+                                logo2Filename={logo2Filename}
+                                onLogo2FilenameChange={setLogo2Filename}
+                                hideStamp={hideStamp}
+                                onHideStampChange={setHideStamp}
+                                hideSeal={hideSeal}
+                                onHideSealChange={setHideSeal}
+                                hideLogo1={hideLogo1}
+                                onHideLogo1Change={setHideLogo1}
+                                hideLogo2={hideLogo2}
+                                onHideLogo2Change={setHideLogo2}
                                 generatedUrl={createPublishedURL({
                                     text,
                                     animationType,
@@ -435,11 +466,11 @@ export default function App() {
                                     fontSize: letterSize,
                                     toText: to,
                                     fromText: from,
-                                    stampImage: stampSrc,
+                                    stampImage: hideStamp ? undefined : stampSrc,
                                     postmarkText,
                                     postmarkSrc,
-                                    logo1Src,
-                                    logo2Src,
+                                    logo1Src: hideLogo1 ? undefined : logo1Src,
+                                    logo2Src: hideLogo2 ? undefined : logo2Src,
                                     toFont,
                                     toSize,
                                     fromFont,
@@ -448,7 +479,7 @@ export default function App() {
                                     insideEnvelopeColor,
                                     letterColor,
                                     animationSpeed,
-                                    sealSrc,
+                                    sealSrc: hideSeal ? undefined : sealSrc,
                                 })}
                                 onCopyUrl={() => navigator.clipboard.writeText(createPublishedURL({
                                     text,
@@ -457,11 +488,11 @@ export default function App() {
                                     fontSize: letterSize,
                                     toText: to,
                                     fromText: from,
-                                    stampImage: stampSrc,
+                                    stampImage: hideStamp ? undefined : stampSrc,
                                     postmarkText,
                                     postmarkSrc,
-                                    logo1Src,
-                                    logo2Src,
+                                    logo1Src: hideLogo1 ? undefined : logo1Src,
+                                    logo2Src: hideLogo2 ? undefined : logo2Src,
                                     toFont,
                                     toSize,
                                     fromFont,
@@ -494,9 +525,10 @@ export default function App() {
                                         isOpen={isEnvelopeOpen}
                                         to={to}
                                         from={from}
-                                        stampSrc={stampSrc}
-                                        logo1Src={logo1Src}
-                                        logo2Src={logo2Src}
+                                        stampSrc={hideStamp ? undefined : stampSrc}
+                                        logo1Src={hideLogo1 ? undefined : logo1Src}
+                                        logo2Src={hideLogo2 ? undefined : logo2Src}
+                                        sealSrc={hideSeal ? undefined : sealSrc}
                                         postmarkSrc={postmarkSrc}
                                         postmarkText={postmarkText}
                                         toFont={toFont}
@@ -506,8 +538,6 @@ export default function App() {
                                         paperColor={envelopeColor}
                                         insideEnvelopeColor={insideEnvelopeColor}
                                         letterColor={letterColor}
-                                        sealSrc={sealSrc}
-
                                     >
                                         <AnimatedText
                                             key={String(isEnvelopeOpen)} // Reset animation on open

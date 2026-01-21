@@ -429,11 +429,12 @@ export function Envelope({
           <div className="absolute inset-4 border-2 opacity-30 pointer-events-none rounded-sm" style={{ borderColor: darkerColor }}></div>
 
           {/* Stamp (Top Right) */}
-          <div className="absolute top-6 right-6 w-20 h-24 transform rotate-3 shadow-sm border border-gray-300 p-1 bg-white overflow-hidden">
-            {stampSrc ? (
+          {/* Stamp (Top Right) */}
+          {stampSrc && (
+            <div className="absolute top-6 right-6 w-20 h-24 transform rotate-3 shadow-sm border border-gray-300 p-1 bg-white overflow-hidden">
               <img src={stampSrc} alt="Stamp" className="w-full h-full object-cover" />
-            ) : null}
-          </div>
+            </div>
+          )}
 
           {/* Postmark overlay */}
           {(postmarkText || postmarkSrc) && (

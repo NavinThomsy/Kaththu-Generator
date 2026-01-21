@@ -9,6 +9,7 @@ import {
     List,
     ListOrdered,
     ChevronDown,
+    Info,
 } from "lucide-react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -128,6 +129,25 @@ export interface EditorPrototypeProps {
     logo2Src?: string;
     onLogo2SrcChange?: (src: string) => void;
 
+    // Filenames & Visibility
+    stampFilename?: string;
+    onStampFilenameChange?: (name: string) => void;
+    sealFilename?: string;
+    onSealFilenameChange?: (name: string) => void;
+    logo1Filename?: string;
+    onLogo1FilenameChange?: (name: string) => void;
+    logo2Filename?: string;
+    onLogo2FilenameChange?: (name: string) => void;
+
+    hideStamp?: boolean;
+    onHideStampChange?: (hide: boolean) => void;
+    hideSeal?: boolean;
+    onHideSealChange?: (hide: boolean) => void;
+    hideLogo1?: boolean;
+    onHideLogo1Change?: (hide: boolean) => void;
+    hideLogo2?: boolean;
+    onHideLogo2Change?: (hide: boolean) => void;
+
     // Actions
     generatedUrl: string;
     onCopyUrl: () => void;
@@ -175,10 +195,52 @@ export function EditorPrototype({
     onLogo1SrcChange,
     logo2Src,
     onLogo2SrcChange,
+    stampFilename,
+    onStampFilenameChange,
+    sealFilename,
+    onSealFilenameChange,
+    logo1Filename,
+    onLogo1FilenameChange,
+    logo2Filename,
+    onLogo2FilenameChange,
+    hideStamp,
+    onHideStampChange,
+    hideSeal,
+    onHideSealChange,
+    hideLogo1,
+    onHideLogo1Change,
+    hideLogo2,
+    onHideLogo2Change,
     generatedUrl,
     onCopyUrl,
     onSaveAndShare,
 }: EditorPrototypeProps) {
+
+    const [copyFeedback, setCopyFeedback] = useState(false);
+
+    // Helper to read file and update state
+    const handleImageUpload = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        setter?: (val: string) => void,
+        setFilename?: (name: string) => void,
+        setHide?: (hide: boolean) => void,
+    ) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (setFilename) setFilename(file.name);
+            if (setHide) setHide(false);
+
+            if (setter) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    if (ev.target?.result) {
+                        setter(ev.target.result as string);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    };
 
 
     // --- TipTap Rich Text Editor ---
@@ -653,77 +715,141 @@ export function EditorPrototype({
                     </span>
                     <div className="grid grid-cols-2" style={{ gap: '10px' }}>
                         {/* Stamp */}
-                        <div className="flex flex-col gap-2">
-                            <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
-                                Stamp
-                            </span>
-                            <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={hideStamp}
+                                    onChange={(e) => onHideStampChange?.(e.target.checked)}
+                                    className="appearance-none h-3 w-3 border border-black/20 rounded-none cursor-pointer bg-white checked:bg-[#6A00FF] checked:border-[#6A00FF] relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[4px] after:top-[1px] after:w-[3px] after:h-[6px] after:border-r-[1.5px] after:border-b-[1.5px] after:border-white after:rotate-45 outline-none"
+                                />
+                                <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
+                                    Stamp
+                                </span>
+                                <div title="Add your own stamps and logos or choose to hide them" className="cursor-help flex items-center">
+                                    <Info size={12} color="rgba(0,0,0,0.4)" />
+                                </div>
+                            </div>
+                            <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideStamp ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
-                                    style={{ backgroundColor: '#6A00FF', color: 'white', display: 'inline-block', width: 'auto' }}
-                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded hover:opacity-90"
+                                    style={{ display: 'inline-block', width: 'auto' }}
+                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
                                 >
                                     Choose File
-                                    <input type="file" accept="image/*" style={{ display: 'none' }} />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => handleImageUpload(e, onStampSrcChange, onStampFilenameChange, onHideStampChange)}
+                                    />
                                 </label>
-                                <span className="font-mono text-[10px] text-gray-400">
-                                    No file chosen
+                                <span className="font-mono text-[10px] text-gray-400 truncate max-w-[100px]">
+                                    {hideStamp ? 'No file uploaded' : (stampFilename || 'Default')}
                                 </span>
                             </div>
                         </div>
 
                         {/* Logo 1 */}
-                        <div className="flex flex-col gap-2">
-                            <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
-                                Logo 1
-                            </span>
-                            <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={hideLogo1}
+                                    onChange={(e) => onHideLogo1Change?.(e.target.checked)}
+                                    className="appearance-none h-3 w-3 border border-black/20 rounded-none cursor-pointer bg-white checked:bg-[#6A00FF] checked:border-[#6A00FF] relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[4px] after:top-[1px] after:w-[3px] after:h-[6px] after:border-r-[1.5px] after:border-b-[1.5px] after:border-white after:rotate-45 outline-none"
+                                />
+                                <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
+                                    Logo 1
+                                </span>
+                                <div title="Add your own stamps and logos or choose to hide them" className="cursor-help flex items-center">
+                                    <Info size={12} color="rgba(0,0,0,0.4)" />
+                                </div>
+                            </div>
+                            <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideLogo1 ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
-                                    style={{ backgroundColor: '#6A00FF', color: 'white', display: 'inline-block', width: 'auto' }}
-                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded hover:opacity-90"
+                                    style={{ display: 'inline-block', width: 'auto' }}
+                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
                                 >
                                     Choose File
-                                    <input type="file" accept="image/*" style={{ display: 'none' }} />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => handleImageUpload(e, onLogo1SrcChange, onLogo1FilenameChange, onHideLogo1Change)}
+                                    />
                                 </label>
-                                <span className="font-mono text-[10px] text-gray-400">
-                                    No file chosen
+                                <span className="font-mono text-[10px] text-gray-400 truncate max-w-[100px]">
+                                    {hideLogo1 ? 'No file uploaded' : (logo1Filename || 'Default')}
                                 </span>
                             </div>
                         </div>
 
                         {/* Wax Seal */}
-                        <div className="flex flex-col gap-2">
-                            <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
-                                Wax Seal
-                            </span>
-                            <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={hideSeal}
+                                    onChange={(e) => onHideSealChange?.(e.target.checked)}
+                                    className="appearance-none h-3 w-3 border border-black/20 rounded-none cursor-pointer bg-white checked:bg-[#6A00FF] checked:border-[#6A00FF] relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[4px] after:top-[1px] after:w-[3px] after:h-[6px] after:border-r-[1.5px] after:border-b-[1.5px] after:border-white after:rotate-45 outline-none"
+                                />
+                                <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
+                                    Wax Seal
+                                </span>
+                                <div title="Add your own stamps and logos or choose to hide them" className="cursor-help flex items-center">
+                                    <Info size={12} color="rgba(0,0,0,0.4)" />
+                                </div>
+                            </div>
+                            <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideSeal ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
-                                    style={{ backgroundColor: '#6A00FF', color: 'white', display: 'inline-block', width: 'auto' }}
-                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded hover:opacity-90"
+                                    style={{ display: 'inline-block', width: 'auto' }}
+                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
                                 >
                                     Choose File
-                                    <input type="file" accept="image/*" style={{ display: 'none' }} />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => handleImageUpload(e, onSealSrcChange, onSealFilenameChange, onHideSealChange)}
+                                    />
                                 </label>
-                                <span className="font-mono text-[10px] text-gray-400">
-                                    Navin Wax Logo.png
+                                <span className="font-mono text-[10px] text-gray-400 truncate max-w-[100px]">
+                                    {hideSeal ? 'No file uploaded' : (sealFilename || 'Default')}
                                 </span>
                             </div>
                         </div>
 
                         {/* Logo 2 */}
-                        <div className="flex flex-col gap-2">
-                            <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
-                                Logo 2
-                            </span>
-                            <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={hideLogo2}
+                                    onChange={(e) => onHideLogo2Change?.(e.target.checked)}
+                                    className="appearance-none h-3 w-3 border border-black/20 rounded-none cursor-pointer bg-white checked:bg-[#6A00FF] checked:border-[#6A00FF] relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[4px] after:top-[1px] after:w-[3px] after:h-[6px] after:border-r-[1.5px] after:border-b-[1.5px] after:border-white after:rotate-45 outline-none"
+                                />
+                                <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
+                                    Logo 2
+                                </span>
+                                <div title="Add your own stamps and logos or choose to hide them" className="cursor-help flex items-center">
+                                    <Info size={12} color="rgba(0,0,0,0.4)" />
+                                </div>
+                            </div>
+                            <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideLogo2 ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
-                                    style={{ backgroundColor: '#6A00FF', color: 'white', display: 'inline-block', width: 'auto' }}
-                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded hover:opacity-90"
+                                    style={{ display: 'inline-block', width: 'auto' }}
+                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
                                 >
                                     Choose File
-                                    <input type="file" accept="image/*" style={{ display: 'none' }} />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => handleImageUpload(e, onLogo2SrcChange, onLogo2FilenameChange, onHideLogo2Change)}
+                                    />
                                 </label>
-                                <span className="font-mono text-[10px] text-gray-400">
-                                    No file chosen
+                                <span className="font-mono text-[10px] text-gray-400 truncate max-w-[100px]">
+                                    {hideLogo2 ? 'No file uploaded' : (logo2Filename || 'Default')}
                                 </span>
                             </div>
                         </div>
@@ -737,24 +863,43 @@ export function EditorPrototype({
                     <span>Share Your Letter</span>
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 relative">
                     <span className="font-mono uppercase tracking-wider" style={{ color: 'rgba(0, 0, 0, 0.8)', fontSize: '12px' }}>
                         URL Generator
                     </span>
                     <div className="flex items-center gap-2">
-                        <input
-                            type="text"
-                            value={generatedUrl}
-                            readOnly
-                            className="flex-1 border border-black/10 px-3 font-mono text-xs text-gray-400 bg-white focus:outline-none"
-                            style={{ height: '34px', boxSizing: 'border-box' }}
-                        />
+                        <div className="relative flex-1 group">
+                            <input
+                                type="text"
+                                value={generatedUrl}
+                                readOnly
+                                onClick={() => {
+                                    if (generatedUrl) {
+                                        navigator.clipboard.writeText(generatedUrl);
+                                        setCopyFeedback(true);
+                                        setTimeout(() => setCopyFeedback(false), 2000);
+                                    }
+                                }}
+                                className="w-full border border-black/10 px-3 font-mono text-xs text-gray-400 bg-white focus:outline-none cursor-pointer hover:bg-gray-50 transition-colors"
+                                style={{ height: '34px', boxSizing: 'border-box' }}
+                                title="Click to copy"
+                            />
+                            {/* Simple Toast */}
+                            {copyFeedback && (
+                                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white text-black text-xs py-2 px-4 rounded-full pointer-events-none transition-all duration-200 z-[9999] shadow-xl border border-black/5 animate-in fade-in slide-in-from-bottom-4 font-medium">
+                                    Link copied to clipboard!
+                                </div>
+                            )}
+                        </div>
                         <button
-                            onClick={onCopyUrl}
-                            style={{ backgroundColor: '#6A00FF', color: 'white' }}
-                            className="font-mono text-[10px] font-medium px-4 py-2 uppercase tracking-wider rounded shrink-0 hover:opacity-90"
+                            onClick={() => {
+                                if (generatedUrl) {
+                                    window.open(generatedUrl, '_blank');
+                                }
+                            }}
+                            className="font-mono text-[10px] font-medium px-4 py-2 uppercase tracking-wider rounded-none shrink-0 btn-purple transition-all min-w-[80px] flex items-center justify-center"
                         >
-                            Copy URL
+                            VIEW
                         </button>
                     </div>
                 </div>
