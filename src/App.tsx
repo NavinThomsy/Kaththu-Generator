@@ -60,12 +60,12 @@ export default function App() {
 
     const [letterFont, setLetterFont] = useState(() => {
         const data = getLetterFromURL();
-        return data?.font || "font-sans";
+        return data?.font || "font-editor-sans";
     });
 
     const [letterSize, setLetterSize] = useState(() => {
         const data = getLetterFromURL();
-        return data?.fontSize || 16;
+        return data?.fontSize || 12;
     });
 
     const [envelopeColor, setEnvelopeColor] = useState(() => {
@@ -131,11 +131,15 @@ export default function App() {
     const [sealFilename, setSealFilename] = useState(DEFAULT_FILENAMES.SEAL);
     const [logo1Filename, setLogo1Filename] = useState(DEFAULT_FILENAMES.LOGO1);
     const [logo2Filename, setLogo2Filename] = useState(DEFAULT_FILENAMES.LOGO2);
+    // Letter Logo
+    const [letterLogoSrc, setLetterLogoSrc] = useState<string | undefined>(undefined);
+    const [letterLogoFilename, setLetterLogoFilename] = useState("Letter Logo.png");
 
     const [hideStamp, setHideStamp] = useState(false);
     const [hideSeal, setHideSeal] = useState(false);
     const [hideLogo1, setHideLogo1] = useState(false);
     const [hideLogo2, setHideLogo2] = useState(false);
+    const [hideLetterLogo, setHideLetterLogo] = useState(false);
 
     const [toFont, setToFont] = useState(() => {
         const data = getLetterFromURL();
@@ -394,125 +398,131 @@ export default function App() {
                     <Menu className="w-5 h-5" />
                 </button>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-8">
-                    <div className="max-w-6xl mx-auto pt-12">
-                        <h1 className="text-center mb-8 text-gray-800 text-3xl font-serif">
-                            Animated Letter App
-                        </h1>
+                <div className="flex-1 overflow-hidden h-full">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 h-full gap-0">
+                        {/* Left Column: Editor Controls */}
+                        <div className="h-full overflow-y-auto p-4 md:p-8 border-r border-gray-200 no-scrollbar">
+                            <div className="max-w-2xl mx-auto pt-12 pb-20">
+                                <h1 className="text-center mb-8 text-gray-800 text-3xl font-serif">
+                                    Animated Letter App
+                                </h1>
+                                <EditorPrototype
+                                    letterText={text}
+                                    onLetterTextChange={setText}
+                                    letterFont={letterFont}
+                                    onLetterFontChange={setLetterFont}
+                                    letterSize={letterSize}
+                                    onLetterSizeChange={setLetterSize}
+                                    textColor="#000000"
+                                    onTextColorChange={() => { }}
+                                    animationType={animationType}
+                                    onAnimationTypeChange={(val) => setAnimationType(val as AnimationType)}
+                                    animationSpeed={animationSpeed}
+                                    onAnimationSpeedChange={setAnimationSpeed}
+                                    toText={to}
+                                    onToTextChange={setTo}
+                                    toFont={toFont}
+                                    onToFontChange={setToFont}
+                                    toSize={toSize}
+                                    onToSizeChange={setToSize}
+                                    fromText={from}
+                                    onFromTextChange={setFrom}
+                                    fromFont={fromFont}
+                                    onFromFontChange={setFromFont}
+                                    fromSize={fromSize}
+                                    onFromSizeChange={setFromSize}
+                                    envelopeColor={envelopeColor}
+                                    onEnvelopeColorChange={setEnvelopeColor}
+                                    paperColor={letterColor}
+                                    onPaperColorChange={setLetterColor}
+                                    insideColor={insideEnvelopeColor}
+                                    onInsideColorChange={setInsideEnvelopeColor}
+                                    postmarkLocation={postmarkText}
+                                    onPostmarkLocationChange={setPostmarkText}
+                                    stampSrc={stampSrc}
+                                    onStampSrcChange={setStampSrc}
+                                    sealSrc={sealSrc}
+                                    onSealSrcChange={setSealSrc}
+                                    logo1Src={logo1Src}
+                                    onLogo1SrcChange={setLogo1Src}
+                                    logo2Src={logo2Src}
+                                    onLogo2SrcChange={setLogo2Src}
+                                    stampFilename={stampFilename}
+                                    onStampFilenameChange={setStampFilename}
+                                    sealFilename={sealFilename}
+                                    onSealFilenameChange={setSealFilename}
+                                    logo1Filename={logo1Filename}
+                                    onLogo1FilenameChange={setLogo1Filename}
+                                    logo2Filename={logo2Filename}
+                                    onLogo2FilenameChange={setLogo2Filename}
+                                    hideStamp={hideStamp}
+                                    onHideStampChange={setHideStamp}
+                                    hideSeal={hideSeal}
+                                    onHideSealChange={setHideSeal}
+                                    hideLogo1={hideLogo1}
+                                    onHideLogo1Change={setHideLogo1}
+                                    hideLogo2={hideLogo2}
+                                    onHideLogo2Change={setHideLogo2}
+                                    letterLogoSrc={letterLogoSrc}
+                                    onLetterLogoSrcChange={setLetterLogoSrc}
+                                    letterLogoFilename={letterLogoFilename}
+                                    onLetterLogoFilenameChange={setLetterLogoFilename}
+                                    hideLetterLogo={hideLetterLogo}
+                                    onHideLetterLogoChange={setHideLetterLogo}
+                                    generatedUrl={createPublishedURL({
+                                        text,
+                                        animationType,
+                                        font: letterFont,
+                                        fontSize: letterSize,
+                                        toText: to,
+                                        fromText: from,
+                                        stampImage: hideStamp ? undefined : stampSrc,
+                                        postmarkText,
+                                        postmarkSrc,
+                                        logo1Src: hideLogo1 ? undefined : logo1Src,
+                                        logo2Src: hideLogo2 ? undefined : logo2Src,
+                                        toFont,
+                                        toSize,
+                                        fromFont,
+                                        fromSize,
+                                        envelopeColor,
+                                        insideEnvelopeColor,
+                                        letterColor,
+                                        animationSpeed,
+                                        sealSrc: hideSeal ? undefined : sealSrc,
+                                    })}
+                                    onCopyUrl={() => navigator.clipboard.writeText(createPublishedURL({
+                                        text,
+                                        animationType,
+                                        font: letterFont,
+                                        fontSize: letterSize,
+                                        toText: to,
+                                        fromText: from,
+                                        stampImage: hideStamp ? undefined : stampSrc,
+                                        postmarkText,
+                                        postmarkSrc,
+                                        logo1Src: hideLogo1 ? undefined : logo1Src,
+                                        logo2Src: hideLogo2 ? undefined : logo2Src,
+                                        toFont,
+                                        toSize,
+                                        fromFont,
+                                        fromSize,
+                                        envelopeColor,
+                                        insideEnvelopeColor,
+                                        letterColor,
+                                        animationSpeed,
+                                        sealSrc,
+                                    }))}
+                                    onSaveAndShare={handleSaveAndShare}
+                                />
 
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start pb-20">
-                            {/* Left Column: Editor Controls - Using EditorPrototype */}
-                            <EditorPrototype
-                                letterText={text}
-                                onLetterTextChange={setText}
-                                letterFont={letterFont}
-                                onLetterFontChange={setLetterFont}
-                                letterSize={letterSize}
-                                onLetterSizeChange={setLetterSize}
-                                textColor="#000000"
-                                onTextColorChange={() => { }}
-                                animationType={animationType}
-                                onAnimationTypeChange={(val) => setAnimationType(val as AnimationType)}
-                                animationSpeed={animationSpeed}
-                                onAnimationSpeedChange={setAnimationSpeed}
-                                toText={to}
-                                onToTextChange={setTo}
-                                toFont={toFont}
-                                onToFontChange={setToFont}
-                                toSize={toSize}
-                                onToSizeChange={setToSize}
-                                fromText={from}
-                                onFromTextChange={setFrom}
-                                fromFont={fromFont}
-                                onFromFontChange={setFromFont}
-                                fromSize={fromSize}
-                                onFromSizeChange={setFromSize}
-                                envelopeColor={envelopeColor}
-                                onEnvelopeColorChange={setEnvelopeColor}
-                                paperColor={letterColor}
-                                onPaperColorChange={setLetterColor}
-                                insideColor={insideEnvelopeColor}
-                                onInsideColorChange={setInsideEnvelopeColor}
-                                postmarkLocation={postmarkText}
-                                onPostmarkLocationChange={setPostmarkText}
-                                stampSrc={stampSrc}
-                                onStampSrcChange={setStampSrc}
-                                sealSrc={sealSrc}
-                                onSealSrcChange={setSealSrc}
-                                logo1Src={logo1Src}
-                                onLogo1SrcChange={setLogo1Src}
-                                logo2Src={logo2Src}
-                                onLogo2SrcChange={setLogo2Src}
-                                stampFilename={stampFilename}
-                                onStampFilenameChange={setStampFilename}
-                                sealFilename={sealFilename}
-                                onSealFilenameChange={setSealFilename}
-                                logo1Filename={logo1Filename}
-                                onLogo1FilenameChange={setLogo1Filename}
-                                logo2Filename={logo2Filename}
-                                onLogo2FilenameChange={setLogo2Filename}
-                                hideStamp={hideStamp}
-                                onHideStampChange={setHideStamp}
-                                hideSeal={hideSeal}
-                                onHideSealChange={setHideSeal}
-                                hideLogo1={hideLogo1}
-                                onHideLogo1Change={setHideLogo1}
-                                hideLogo2={hideLogo2}
-                                onHideLogo2Change={setHideLogo2}
-                                generatedUrl={createPublishedURL({
-                                    text,
-                                    animationType,
-                                    font: letterFont,
-                                    fontSize: letterSize,
-                                    toText: to,
-                                    fromText: from,
-                                    stampImage: hideStamp ? undefined : stampSrc,
-                                    postmarkText,
-                                    postmarkSrc,
-                                    logo1Src: hideLogo1 ? undefined : logo1Src,
-                                    logo2Src: hideLogo2 ? undefined : logo2Src,
-                                    toFont,
-                                    toSize,
-                                    fromFont,
-                                    fromSize,
-                                    envelopeColor,
-                                    insideEnvelopeColor,
-                                    letterColor,
-                                    animationSpeed,
-                                    sealSrc: hideSeal ? undefined : sealSrc,
-                                })}
-                                onCopyUrl={() => navigator.clipboard.writeText(createPublishedURL({
-                                    text,
-                                    animationType,
-                                    font: letterFont,
-                                    fontSize: letterSize,
-                                    toText: to,
-                                    fromText: from,
-                                    stampImage: hideStamp ? undefined : stampSrc,
-                                    postmarkText,
-                                    postmarkSrc,
-                                    logo1Src: hideLogo1 ? undefined : logo1Src,
-                                    logo2Src: hideLogo2 ? undefined : logo2Src,
-                                    toFont,
-                                    toSize,
-                                    fromFont,
-                                    fromSize,
-                                    envelopeColor,
-                                    insideEnvelopeColor,
-                                    letterColor,
-                                    animationSpeed,
-                                    sealSrc,
-                                }))}
-                                onSaveAndShare={handleSaveAndShare}
-                            />
+                            </div>
+                        </div>
 
-                            {/* Right Column: Preview */}
-                            <div ref={previewContainerRef} className="space-y-4 lg:sticky lg:top-8">
-                                <div className="text-center">
-                                    <h2 className="mb-2 text-gray-700 font-serif text-lg">
-                                        Preview
-                                    </h2>
-                                </div>
+                        {/* Right Column: Preview */}
+                        <div className="h-full overflow-y-auto p-4 md:p-8 bg-gray-50/50">
+                            <div ref={previewContainerRef} className="max-w-2xl mx-auto pt-12 space-y-4">
+
 
                                 <div
                                     ref={envelopeRef}
@@ -538,6 +548,9 @@ export default function App() {
                                         paperColor={envelopeColor}
                                         insideEnvelopeColor={insideEnvelopeColor}
                                         letterColor={letterColor}
+                                        letterLogoSrc={letterLogoSrc}
+                                        hideLetterLogo={hideLetterLogo}
+                                        letterFont={letterFont}
                                     >
                                         <AnimatedText
                                             key={String(isEnvelopeOpen)} // Reset animation on open
@@ -551,16 +564,22 @@ export default function App() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* Save & Share Button */}
-                        <button
-                            onClick={handleSaveAndShare}
-                            className="fixed bottom-8 right-8 px-6 py-3 bg-gray-900 text-white rounded-full shadow-2xl hover:bg-black transition-all flex items-center gap-2 z-50 hover:scale-105"
-                        >
-                            <Share2 className="w-5 h-5" />
-                            Save & Share Link
-                        </button>
                     </div>
+
+                    {/* Save & Share Button */}
+                    {/* Reset Button */}
+                    <button
+                        onClick={() => setIsEnvelopeOpen(false)}
+                        className="fixed bottom-8 right-8 w-14 h-14 text-white rounded-full shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center z-[100]"
+                        style={{ backgroundColor: '#6200ea' }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#5000ca'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6200ea'}
+                        onMouseDown={(e) => e.currentTarget.style.backgroundColor = '#4000aa'}
+                        onMouseUp={(e) => e.currentTarget.style.backgroundColor = '#5000ca'}
+                        title="Reset View"
+                    >
+                        <RotateCcw className="w-6 h-6" />
+                    </button>
                 </div>
             </div>
         </div>

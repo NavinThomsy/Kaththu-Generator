@@ -10,6 +10,10 @@ import {
     ListOrdered,
     ChevronDown,
     Info,
+    Eye,
+    EyeOff,
+    Indent,
+    Outdent,
 } from "lucide-react";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -17,6 +21,46 @@ import UnderlineExtension from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
+import Link from '@tiptap/extension-link';
+import FontFamily from '@tiptap/extension-font-family';
+import { Extension } from '@tiptap/core';
+
+// Custom Font Size Extension
+const FontSize = Extension.create({
+    name: 'fontSize',
+    addOptions() {
+        return {
+            types: ['textStyle'],
+        };
+    },
+    addGlobalAttributes() {
+        return [
+            {
+                types: this.options.types,
+                attributes: {
+                    fontSize: {
+                        default: null,
+                        parseHTML: element => element.style.fontSize ? element.style.fontSize.replace('px', '') : null,
+                        renderHTML: attributes => {
+                            if (!attributes.fontSize) {
+                                return {};
+                            }
+                            return {
+                                style: `font-size: ${attributes.fontSize}px`,
+                            };
+                        },
+                    },
+                },
+            },
+        ];
+    },
+});
+
+const FONT_STACKS: Record<string, string> = {
+    'font-editor-sans': '"Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    'font-serif': 'ui-serif, Georgia, Cambria, "Times New Roman", Times, serif',
+    'font-mono': '"Geist Mono", monospace',
+};
 
 const CustomDropdown = ({ value, onChange, options, style, className }: { value: string | number, onChange: (val: any) => void, options: { label: string | number, value: string | number }[], style?: React.CSSProperties, className?: string }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -37,10 +81,11 @@ const CustomDropdown = ({ value, onChange, options, style, className }: { value:
             ref={dropdownRef}
             className={`relative flex items-center border border-black/10 bg-white cursor-pointer select-none ${className || ''}`}
             style={{ height: '34px', gap: '5px', ...style }}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => setIsOpen(!isOpen)}
         >
             <span className="font-mono text-xs text-black flex-1 truncate" style={{ paddingLeft: '8px' }}>
-                {value}
+                {options.find(opt => opt.value === value)?.label || value}
             </span>
             <ChevronDown className="w-3 h-3 text-black flex-shrink-0" style={{ marginRight: '8px' }} />
 
@@ -57,6 +102,7 @@ const CustomDropdown = ({ value, onChange, options, style, className }: { value:
                         <div
                             key={option.value}
                             className={`px-3 py-2 text-xs text-left font-mono hover:bg-gray-50 transition-colors ${option.value === value ? 'bg-gray-50' : ''}`}
+                            onMouseDown={(e) => e.preventDefault()}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onChange(option.value);
@@ -138,6 +184,13 @@ export interface EditorPrototypeProps {
     onLogo1FilenameChange?: (name: string) => void;
     logo2Filename?: string;
     onLogo2FilenameChange?: (name: string) => void;
+    // Letter Logo
+    letterLogoSrc?: string;
+    onLetterLogoSrcChange?: (src: string | undefined) => void;
+    letterLogoFilename?: string;
+    onLetterLogoFilenameChange?: (name: string) => void;
+    hideLetterLogo?: boolean;
+    onHideLetterLogoChange?: (hide: boolean) => void;
 
     hideStamp?: boolean;
     onHideStampChange?: (hide: boolean) => void;
@@ -211,6 +264,12 @@ export function EditorPrototype({
     onHideLogo1Change,
     hideLogo2,
     onHideLogo2Change,
+    letterLogoSrc,
+    onLetterLogoSrcChange,
+    letterLogoFilename,
+    onLetterLogoFilenameChange,
+    hideLetterLogo,
+    onHideLetterLogoChange,
     generatedUrl,
     onCopyUrl,
     onSaveAndShare,
@@ -244,29 +303,35 @@ export function EditorPrototype({
 
 
     // --- TipTap Rich Text Editor ---
+    // State to force re-render for toolbar updates
+    const [, forceUpdate] = useState(0);
+
     const editor = useEditor({
         extensions: [
-            StarterKit.configure({
-                // Disable default heading, we don't need it
-                heading: false,
-            }),
+            StarterKit,
             UnderlineExtension,
             TextAlign.configure({
-                types: ['paragraph'],
+                types: ['heading', 'paragraph'],
+            }),
+            Link.configure({
+                openOnClick: false,
             }),
             TextStyle,
+            FontFamily,
+            FontSize,
             Color,
         ],
         content: letterText || '<p>Write your letter here...</p>',
         onUpdate: ({ editor }) => {
-            // Sync editor content to parent state for live preview (HTML to preserve formatting)
             const html = editor.getHTML();
             onLetterTextChange(html);
         },
+        onSelectionUpdate: () => {
+            forceUpdate(n => n + 1);
+        },
         editorProps: {
             attributes: {
-                class: 'w-full h-full outline-none prose prose-sm max-w-none',
-                style: `font-family: ${letterFont === 'Mono' ? 'monospace' : letterFont === 'Serif' ? 'serif' : 'sans-serif'}; font-size: ${letterSize}px; color: ${textColor};`,
+                class: 'prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl focus:outline-none h-full',
             },
         },
     });
@@ -337,11 +402,31 @@ export function EditorPrototype({
 
                         {/* List buttons */}
                         <div className="flex border border-black/10">
-                            <button className="p-2 hover:bg-gray-50 border-r border-black/10">
+                            <button
+                                onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                                className={`p-2 hover:bg-gray-50 border-r border-black/10 ${editor?.isActive('bulletList') ? 'bg-gray-200' : ''}`}
+                            >
                                 <List className="w-4 h-4 text-black" />
                             </button>
-                            <button className="p-2 hover:bg-gray-50">
+                            <button
+                                onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                                className={`p-2 hover:bg-gray-50 border-r border-black/10 ${editor?.isActive('orderedList') ? 'bg-gray-200' : ''}`}
+                            >
                                 <ListOrdered className="w-4 h-4 text-black" />
+                            </button>
+                            <button
+                                onClick={() => editor?.chain().focus().liftListItem('listItem').run()}
+                                disabled={!editor?.can().liftListItem('listItem')}
+                                className="p-2 hover:bg-gray-50 disabled:opacity-30 border-r border-black/10"
+                            >
+                                <Outdent className="w-4 h-4 text-black" />
+                            </button>
+                            <button
+                                onClick={() => editor?.chain().focus().sinkListItem('listItem').run()}
+                                disabled={!editor?.can().sinkListItem('listItem')}
+                                className="p-2 hover:bg-gray-50 disabled:opacity-30"
+                            >
+                                <Indent className="w-4 h-4 text-black" />
                             </button>
                         </div>
 
@@ -385,20 +470,75 @@ export function EditorPrototype({
 
                         {/* Font dropdown */}
                         <CustomDropdown
-                            value={letterFont}
-                            onChange={onLetterFontChange}
+                            value={(() => {
+                                if (!editor) return letterFont;
+                                const { from, to, empty } = editor.state.selection;
+                                if (empty) {
+                                    const attrs = editor.getAttributes('textStyle');
+                                    const commonFont = attrs.fontFamily;
+                                    if (commonFont) {
+                                        return Object.keys(FONT_STACKS).find(k => FONT_STACKS[k] === commonFont) || commonFont;
+                                    }
+                                    return letterFont;
+                                }
+
+                                const fonts = new Set();
+                                editor.state.doc.nodesBetween(from, to, (node) => {
+                                    if (node.isText) {
+                                        const mark = node.marks.find(m => m.type.name === 'textStyle' && m.attrs.fontFamily);
+                                        const stack = mark?.attrs.fontFamily;
+                                        const key = stack ? (Object.keys(FONT_STACKS).find(k => FONT_STACKS[k] === stack) || stack) : letterFont;
+                                        fonts.add(key);
+                                    }
+                                });
+
+                                if (fonts.size > 1) return "Mixed";
+                                if (fonts.size === 1) return [...fonts][0];
+                                return letterFont;
+                            })()}
+                            onChange={(val) => {
+                                const stack = FONT_STACKS[val as string];
+                                if (stack) {
+                                    editor?.chain().focus().setFontFamily(stack).run();
+                                }
+                                onLetterFontChange(val);
+                            }}
                             options={[
-                                { label: 'Sans', value: 'Sans' },
-                                { label: 'Serif', value: 'Serif' },
-                                { label: 'Mono', value: 'Mono' },
+                                { label: 'Sans', value: 'font-editor-sans' },
+                                { label: 'Serif', value: 'font-serif' },
+                                { label: 'Mono', value: 'font-mono' },
                             ]}
                             style={{ width: '92px' }}
                         />
 
                         {/* Size dropdown */}
                         <CustomDropdown
-                            value={letterSize}
-                            onChange={onLetterSizeChange}
+                            value={(() => {
+                                if (!editor) return letterSize;
+                                const { from, to, empty } = editor.state.selection;
+                                if (empty) {
+                                    const attrs = editor.getAttributes('textStyle');
+                                    if (attrs.fontSize) return Number(attrs.fontSize);
+                                    return letterSize;
+                                }
+
+                                const sizes = new Set<number>();
+                                editor.state.doc.nodesBetween(from, to, (node) => {
+                                    if (node.isText) {
+                                        const mark = node.marks.find(m => m.type.name === 'textStyle' && m.attrs.fontSize);
+                                        const size = mark ? Number(mark.attrs.fontSize) : letterSize;
+                                        sizes.add(size);
+                                    }
+                                });
+
+                                if (sizes.size > 1) return "Mixed";
+                                if (sizes.size === 1) return [...sizes][0];
+                                return letterSize;
+                            })()}
+                            onChange={(val) => {
+                                editor?.chain().focus().setMark('textStyle', { fontSize: val }).run();
+                                onLetterSizeChange(val as number);
+                            }}
                             options={[12, 14, 16, 18, 20, 24, 28, 32].map(s => ({ label: s, value: s }))}
                             style={{ gap: '10px' }}
                         />
@@ -406,9 +546,8 @@ export function EditorPrototype({
 
                     {/* Rich Text Editor */}
                     <div
-                        className="w-full h-32 border border-black/10 p-3 overflow-auto focus-within:border-black/20"
+                        className={`w-full h-32 border border-black/10 p-3 overflow-auto focus-within:border-black/20 ${letterFont}`}
                         style={{
-                            fontFamily: letterFont === 'Mono' ? 'monospace' : letterFont === 'Serif' ? 'serif' : 'sans-serif',
                             fontSize: `${letterSize}px`,
                             color: textColor,
                         }}
@@ -428,10 +567,10 @@ export function EditorPrototype({
                             value={animationType}
                             onChange={onAnimationTypeChange}
                             options={[
-                                { label: 'Typewriter', value: 'Typewriter' },
-                                { label: 'Fade In', value: 'Fade In' },
-                                { label: 'Word by Word', value: 'Word by Word' },
-                                { label: 'Character', value: 'Character' },
+                                { label: 'TYPEWRITER', value: 'typewriter' },
+                                { label: 'FADE IN', value: 'fade-in' },
+                                { label: 'WORD BY WORD', value: 'word-by-word' },
+                                { label: 'CHARACTER', value: 'character-by-character' },
                             ]}
                             style={{ width: '150px' }}
                         />
@@ -506,9 +645,9 @@ export function EditorPrototype({
                                 value={toFont}
                                 onChange={onToFontChange}
                                 options={[
-                                    { label: 'Sans', value: 'Sans' },
-                                    { label: 'Serif', value: 'Serif' },
-                                    { label: 'Mono', value: 'Mono' },
+                                    { label: 'Sans', value: 'font-editor-sans' },
+                                    { label: 'Serif', value: 'font-serif' },
+                                    { label: 'Mono', value: 'font-mono' },
                                 ]}
                                 style={{ width: '92px' }}
                             />
@@ -522,7 +661,8 @@ export function EditorPrototype({
                         <textarea
                             value={toText}
                             onChange={(e) => onToTextChange(e.target.value)}
-                            className="w-full h-20 border border-black/10 p-3 resize-none text-sm focus:outline-none focus:border-black/20"
+                            className={`w-full h-20 border border-black/10 p-3 resize-none text-sm focus:outline-none focus:border-black/20 ${toFont}`}
+                            style={{ fontSize: `${toSize}px` }}
                             placeholder=""
                         />
                     </div>
@@ -537,9 +677,9 @@ export function EditorPrototype({
                                 value={fromFont}
                                 onChange={onFromFontChange}
                                 options={[
-                                    { label: 'Sans', value: 'Sans' },
-                                    { label: 'Serif', value: 'Serif' },
-                                    { label: 'Mono', value: 'Mono' },
+                                    { label: 'Sans', value: 'font-editor-sans' },
+                                    { label: 'Serif', value: 'font-serif' },
+                                    { label: 'Mono', value: 'font-mono' },
                                 ]}
                                 style={{ width: '92px' }}
                             />
@@ -553,7 +693,8 @@ export function EditorPrototype({
                         <textarea
                             value={fromText}
                             onChange={(e) => onFromTextChange(e.target.value)}
-                            className="w-full h-20 border border-black/10 p-3 resize-none text-sm focus:outline-none focus:border-black/20"
+                            className={`w-full h-20 border border-black/10 p-3 resize-none text-sm focus:outline-none focus:border-black/20 ${fromFont}`}
+                            style={{ fontSize: `${fromSize}px` }}
                             placeholder=""
                         />
                     </div>
@@ -601,9 +742,13 @@ export function EditorPrototype({
                                         }}
                                     />
                                 </div>
-                                <div className="flex items-center border border-black/10 px-3" style={{ height: '34px', boxSizing: 'border-box' }}>
-                                    <span className="font-mono text-xs text-black">{envelopeColor}</span>
-                                </div>
+                                <input
+                                    type="text"
+                                    value={envelopeColor}
+                                    onChange={(e) => onEnvelopeColorChange(e.target.value)}
+                                    className="font-mono text-xs text-black border border-black/10 px-3 focus:outline-none focus:border-black/30"
+                                    style={{ height: '34px', width: '80px', boxSizing: 'border-box' }}
+                                />
                             </div>
                         </div>
 
@@ -643,9 +788,13 @@ export function EditorPrototype({
                                         }}
                                     />
                                 </div>
-                                <div className="flex items-center border border-black/10 px-3" style={{ height: '34px', boxSizing: 'border-box' }}>
-                                    <span className="font-mono text-xs text-black">{paperColor}</span>
-                                </div>
+                                <input
+                                    type="text"
+                                    value={paperColor}
+                                    onChange={(e) => onPaperColorChange(e.target.value)}
+                                    className="font-mono text-xs text-black border border-black/10 px-3 focus:outline-none focus:border-black/30"
+                                    style={{ height: '34px', width: '80px', boxSizing: 'border-box' }}
+                                />
                             </div>
                         </div>
 
@@ -685,50 +834,48 @@ export function EditorPrototype({
                                         }}
                                     />
                                 </div>
-                                <div className="flex items-center border border-black/10 px-3" style={{ height: '34px', boxSizing: 'border-box' }}>
-                                    <span className="font-mono text-xs text-black">{insideColor}</span>
-                                </div>
+                                <input
+                                    type="text"
+                                    value={insideColor}
+                                    onChange={(e) => onInsideColorChange(e.target.value)}
+                                    className="font-mono text-xs text-black border border-black/10 px-3 focus:outline-none focus:border-black/30"
+                                    style={{ height: '34px', width: '80px', boxSizing: 'border-box' }}
+                                />
                             </div>
                         </div>
 
-                        {/* Postmark Location */}
-                        <div className="flex flex-col gap-1 flex-1">
-                            <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
-                                Postmark Location
-                            </span>
-                            <input
-                                type="text"
-                                value={postmarkLocation}
-                                onChange={(e) => onPostmarkLocationChange(e.target.value)}
-                                placeholder="LONDON (EMPTY TO HIDE)"
-                                className="border border-black/10 px-3 font-mono text-xs text-black focus:outline-none focus:border-black/20 [&::placeholder]:text-[rgba(0,0,0,0.3)]"
-                                style={{ '--placeholder-color': 'rgba(0, 0, 0, 0.3)', 'fontSize': '10px', height: '34px', boxSizing: 'border-box' } as React.CSSProperties}
-                            />
-                        </div>
+
                     </div>
                 </div>
 
-                {/* Images section */}
+                {/* Stickers section */}
                 <div className="flex flex-col gap-2">
-                    <span className="font-mono uppercase tracking-wider" style={{ color: 'rgba(0, 0, 0, 0.8)', fontSize: '12px' }}>
-                        Images
-                    </span>
+                    <div className="flex items-center gap-2">
+                        <span className="font-mono uppercase tracking-wider" style={{ color: 'rgba(0, 0, 0, 0.8)', fontSize: '12px' }}>
+                            Stickers
+                        </span>
+                        <div title="Toggle checkboxes to show/hide items. Click 'Choose File' to upload your own custom images." className="cursor-help flex items-center">
+                            <Info size={12} color="rgba(0,0,0,0.4)" />
+                        </div>
+                    </div>
+
+
+
                     <div className="grid grid-cols-2" style={{ gap: '10px' }}>
                         {/* Stamp */}
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={hideStamp}
-                                    onChange={(e) => onHideStampChange?.(e.target.checked)}
-                                    className="appearance-none h-3 w-3 border border-black/20 rounded-none cursor-pointer bg-white checked:bg-[#6A00FF] checked:border-[#6A00FF] relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[4px] after:top-[1px] after:w-[3px] after:h-[6px] after:border-r-[1.5px] after:border-b-[1.5px] after:border-white after:rotate-45 outline-none"
-                                />
-                                <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => onHideStampChange?.(!hideStamp)}
+                                    className="focus:outline-none flex items-center justify-center p-0"
+                                    style={{ height: '12px', width: '12px' }}
+                                >
+                                    {hideStamp ? <EyeOff size={12} strokeWidth={1.5} className="text-gray-400" /> : <Eye size={12} strokeWidth={1.5} className="text-gray-500" />}
+                                </button>
+                                <span className="font-mono uppercase flex items-center h-[12px] leading-none" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
                                     Stamp
                                 </span>
-                                <div title="Add your own stamps and logos or choose to hide them" className="cursor-help flex items-center">
-                                    <Info size={12} color="rgba(0,0,0,0.4)" />
-                                </div>
                             </div>
                             <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideStamp ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
@@ -752,18 +899,17 @@ export function EditorPrototype({
                         {/* Logo 1 */}
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={hideLogo1}
-                                    onChange={(e) => onHideLogo1Change?.(e.target.checked)}
-                                    className="appearance-none h-3 w-3 border border-black/20 rounded-none cursor-pointer bg-white checked:bg-[#6A00FF] checked:border-[#6A00FF] relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[4px] after:top-[1px] after:w-[3px] after:h-[6px] after:border-r-[1.5px] after:border-b-[1.5px] after:border-white after:rotate-45 outline-none"
-                                />
-                                <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => onHideLogo1Change?.(!hideLogo1)}
+                                    className="focus:outline-none flex items-center justify-center p-0"
+                                    style={{ height: '12px', width: '12px' }}
+                                >
+                                    {hideLogo1 ? <EyeOff size={12} strokeWidth={1.5} className="text-gray-400" /> : <Eye size={12} strokeWidth={1.5} className="text-gray-500" />}
+                                </button>
+                                <span className="font-mono uppercase flex items-center h-[12px] leading-none" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
                                     Logo 1
                                 </span>
-                                <div title="Add your own stamps and logos or choose to hide them" className="cursor-help flex items-center">
-                                    <Info size={12} color="rgba(0,0,0,0.4)" />
-                                </div>
                             </div>
                             <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideLogo1 ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
@@ -787,18 +933,17 @@ export function EditorPrototype({
                         {/* Wax Seal */}
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={hideSeal}
-                                    onChange={(e) => onHideSealChange?.(e.target.checked)}
-                                    className="appearance-none h-3 w-3 border border-black/20 rounded-none cursor-pointer bg-white checked:bg-[#6A00FF] checked:border-[#6A00FF] relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[4px] after:top-[1px] after:w-[3px] after:h-[6px] after:border-r-[1.5px] after:border-b-[1.5px] after:border-white after:rotate-45 outline-none"
-                                />
-                                <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => onHideSealChange?.(!hideSeal)}
+                                    className="focus:outline-none flex items-center justify-center p-0"
+                                    style={{ height: '12px', width: '12px' }}
+                                >
+                                    {hideSeal ? <EyeOff size={12} strokeWidth={1.5} className="text-gray-400" /> : <Eye size={12} strokeWidth={1.5} className="text-gray-500" />}
+                                </button>
+                                <span className="font-mono uppercase flex items-center h-[12px] leading-none" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
                                     Wax Seal
                                 </span>
-                                <div title="Add your own stamps and logos or choose to hide them" className="cursor-help flex items-center">
-                                    <Info size={12} color="rgba(0,0,0,0.4)" />
-                                </div>
                             </div>
                             <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideSeal ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
@@ -822,18 +967,17 @@ export function EditorPrototype({
                         {/* Logo 2 */}
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={hideLogo2}
-                                    onChange={(e) => onHideLogo2Change?.(e.target.checked)}
-                                    className="appearance-none h-3 w-3 border border-black/20 rounded-none cursor-pointer bg-white checked:bg-[#6A00FF] checked:border-[#6A00FF] relative after:content-[''] after:hidden checked:after:block after:absolute after:left-[4px] after:top-[1px] after:w-[3px] after:h-[6px] after:border-r-[1.5px] after:border-b-[1.5px] after:border-white after:rotate-45 outline-none"
-                                />
-                                <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => onHideLogo2Change?.(!hideLogo2)}
+                                    className="focus:outline-none flex items-center justify-center p-0"
+                                    style={{ height: '12px', width: '12px' }}
+                                >
+                                    {hideLogo2 ? <EyeOff size={12} strokeWidth={1.5} className="text-gray-400" /> : <Eye size={12} strokeWidth={1.5} className="text-gray-500" />}
+                                </button>
+                                <span className="font-mono uppercase flex items-center h-[12px] leading-none" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
                                     Logo 2
                                 </span>
-                                <div title="Add your own stamps and logos or choose to hide them" className="cursor-help flex items-center">
-                                    <Info size={12} color="rgba(0,0,0,0.4)" />
-                                </div>
                             </div>
                             <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideLogo2 ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
@@ -853,6 +997,57 @@ export function EditorPrototype({
                                 </span>
                             </div>
                         </div>
+
+                        {/* Letter Logo */}
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => onHideLetterLogoChange?.(!hideLetterLogo)}
+                                    className="focus:outline-none flex items-center justify-center p-0"
+                                    style={{ height: '12px', width: '12px' }}
+                                >
+                                    {hideLetterLogo ? <EyeOff size={12} strokeWidth={1.5} className="text-gray-400" /> : <Eye size={12} strokeWidth={1.5} className="text-gray-500" />}
+                                </button>
+                                <span className="font-mono uppercase flex items-center h-[12px] leading-none" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
+                                    Letter Logo
+                                </span>
+                            </div>
+                            <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideLetterLogo ? 'opacity-50 pointer-events-none' : ''}`}>
+                                <label
+                                    style={{ display: 'inline-block', width: 'auto' }}
+                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
+                                >
+                                    Choose File
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => handleImageUpload(e, onLetterLogoSrcChange, onLetterLogoFilenameChange, onHideLetterLogoChange)}
+                                    />
+                                </label>
+                                <span className="font-mono text-[10px] text-gray-400 truncate max-w-[100px]">
+                                    {letterLogoFilename || 'Default'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Postmark Location (Moved to end) */}
+                        <div className="flex flex-col gap-1">
+                            <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
+                                Postmark Location
+                            </span>
+                            <div className="flex items-center gap-2" style={{ height: '34px' }}>
+                                <input
+                                    type="text"
+                                    value={postmarkLocation}
+                                    onChange={(e) => onPostmarkLocationChange(e.target.value)}
+                                    placeholder="LONDON"
+                                    className="w-[105px] border border-black/10 px-3 font-mono text-xs text-black focus:outline-none focus:border-black/20 [&::placeholder]:text-[rgba(0,0,0,0.3)]"
+                                    style={{ '--placeholder-color': 'rgba(0, 0, 0, 0.3)', 'fontSize': '10px', height: '100%', boxSizing: 'border-box' } as React.CSSProperties}
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -865,10 +1060,10 @@ export function EditorPrototype({
 
                 <div className="flex flex-col gap-2 relative">
                     <span className="font-mono uppercase tracking-wider" style={{ color: 'rgba(0, 0, 0, 0.8)', fontSize: '12px' }}>
-                        URL Generator
+                        Click to copy URL
                     </span>
                     <div className="flex items-center gap-2">
-                        <div className="relative flex-1 group">
+                        <div className="relative flex-none group" style={{ width: '50%' }}>
                             <input
                                 type="text"
                                 value={generatedUrl}
@@ -893,13 +1088,14 @@ export function EditorPrototype({
                         </div>
                         <button
                             onClick={() => {
+                                onSaveAndShare?.();
                                 if (generatedUrl) {
                                     window.open(generatedUrl, '_blank');
                                 }
                             }}
                             className="font-mono text-[10px] font-medium px-4 py-2 uppercase tracking-wider rounded-none shrink-0 btn-purple transition-all min-w-[80px] flex items-center justify-center"
                         >
-                            VIEW
+                            SAVE & VIEW
                         </button>
                     </div>
                 </div>
