@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { TextEditor } from "./components/TextEditor";
 import { Envelope } from "./components/Envelope";
 import {
@@ -20,12 +21,14 @@ import waxSealImage from "./assets/Navin Logo Wax Seal.png";
 import stampImage from "./assets/Stamp.png";
 // @ts-ignore
 import logo1Image from "./assets/Logo 1.png";
+// @ts-ignore
+import logo2Image from "./assets/Logo 2.png";
 
 const DEFAULT_IMAGES = {
     STAMP: stampImage,
     SEAL: waxSealImage,
     LOGO1: logo1Image,
-    LOGO2: "https://images.unsplash.com/photo-1767695086479-869f10facf90?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200"
+    LOGO2: logo2Image
 };
 
 const DEFAULT_FILENAMES = {
@@ -34,6 +37,72 @@ const DEFAULT_FILENAMES = {
     LOGO1: "Logo 1.png",
     LOGO2: "Logo 2.png"
 };
+
+const DEFINITIONS = [
+    { word: "kathukal", phonetics: "[ka-thu-kal]" },
+    { word: "കത്തുകൾ", phonetics: "[ka-thu-kal]" },
+    { word: "letters", phonetics: "[let-ers]" }
+];
+
+function CyclingTitle() {
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex((prev) => (prev + 1) % DEFINITIONS.length);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const current = DEFINITIONS[index];
+
+    return (
+        <div className="mb-8 max-w-sm mx-auto text-left">
+            <div className="h-20">
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={current.word}
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -10, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <h1 className="text-3xl font-mono font-bold text-gray-900 mb-2 lowercase">
+                            {current.word}
+                        </h1>
+                        <div className="text-sm font-mono text-gray-500 mb-1">
+                            {current.phonetics}
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="text-sm font-mono text-gray-500 italic mb-6"
+            >
+                noun.
+            </motion.div>
+
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="pl-4 mb-2"
+                style={{ borderLeft: '3px solid #6200ea' }}
+            >
+                <p className="text-sm font-mono text-gray-700 leading-relaxed mb-4">
+                    Written messages used to communicate thoughts, information, or emotions, traditionally sent on paper from one person to another.
+                </p>
+                <div className="text-xs font-mono text-gray-400">
+                    see also: letters, notes, correspondence, mail
+                </div>
+            </motion.div>
+        </div>
+    );
+}
 
 export default function App() {
     const [viewMode, setViewMode] = useState(() =>
@@ -82,6 +151,8 @@ export default function App() {
         const data = getLetterFromURL();
         return data?.insideEnvelopeColor || "#966d1d";
     });
+
+    const [textColor, setTextColor] = useState("#000000"); // Add Text Color State
 
     // --- Envelope State ---
     const [to, setTo] = useState(() => {
@@ -170,7 +241,7 @@ export default function App() {
         },
     );
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // --- Handlers ---
 
@@ -193,17 +264,17 @@ export default function App() {
     const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
     const [key, setKey] = useState(0);
     const envelopeRef = useRef<HTMLDivElement>(null);
-    const previewContainerRef = useRef<HTMLDivElement>(null);
+    const rightColumnRef = useRef<HTMLDivElement>(null);
 
     // Click outside to close envelope
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as Node;
-            // Only close if click is INSIDE the preview container but OUTSIDE the envelope itself
+            // Only close if click is INSIDE the right column (preview area) but OUTSIDE the envelope itself
             if (
                 isEnvelopeOpen &&
-                previewContainerRef.current &&
-                previewContainerRef.current.contains(target) && // Click is in the preview area
+                rightColumnRef.current &&
+                rightColumnRef.current.contains(target) && // Click is in the preview right column
                 envelopeRef.current &&
                 !envelopeRef.current.contains(target) // Click is NOT on the envelope
             ) {
@@ -261,6 +332,19 @@ export default function App() {
             window.removeEventListener("popstate", handleHashChange);
         };
     }, []);
+
+    const animatedTextComponent = React.useMemo(() => (
+        <AnimatedText
+            key={`${isEnvelopeOpen}-${animationType}`} // Reset animation on open or type change
+            text={text}
+            animationType={animationType}
+            font={letterFont}
+            fontSize={letterSize}
+            textColor={textColor}
+            delay={1.5}
+            animationSpeed={animationSpeed}
+        />
+    ), [isEnvelopeOpen, text, animationType, letterFont, letterSize, animationSpeed, textColor]);
 
     const handleOpenEnvelope = () => {
         setIsEnvelopeOpen(true);
@@ -385,27 +469,28 @@ export default function App() {
                     letters={sentLetters}
                     onDelete={handleDeleteLetter}
                     onOpen={handleOpenSavedLink}
+                    onClose={() => setIsSidebarOpen(false)}
                 />
             </div>
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-full overflow-hidden relative">
                 {/* Toggle Sidebar Button */}
-                <button
-                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="absolute top-4 left-4 z-10 p-2 bg-white rounded-lg shadow-md hover:bg-gray-50 text-gray-600"
-                >
-                    <Menu className="w-5 h-5" />
-                </button>
+                {!isSidebarOpen && (
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="absolute top-4 left-4 z-10 p-2 bg-white rounded-lg shadow-md hover:bg-gray-50 text-gray-600"
+                    >
+                        <Menu className="w-5 h-5" />
+                    </button>
+                )}
 
                 <div className="flex-1 overflow-hidden h-full">
                     <div className="grid grid-cols-1 lg:grid-cols-2 h-full gap-0">
                         {/* Left Column: Editor Controls */}
                         <div className="h-full overflow-y-auto p-4 md:p-8 border-r border-gray-200 no-scrollbar">
-                            <div className="max-w-2xl mx-auto pt-12 pb-20">
-                                <h1 className="text-center mb-8 text-gray-800 text-3xl font-serif">
-                                    Animated Letter App
-                                </h1>
+                            <div className="max-w-2xl mx-auto pt-10 pb-20">
+                                <CyclingTitle />
                                 <EditorPrototype
                                     letterText={text}
                                     onLetterTextChange={setText}
@@ -413,8 +498,8 @@ export default function App() {
                                     onLetterFontChange={setLetterFont}
                                     letterSize={letterSize}
                                     onLetterSizeChange={setLetterSize}
-                                    textColor="#000000"
-                                    onTextColorChange={() => { }}
+                                    textColor={textColor}
+                                    onTextColorChange={setTextColor}
                                     animationType={animationType}
                                     onAnimationTypeChange={(val) => setAnimationType(val as AnimationType)}
                                     animationSpeed={animationSpeed}
@@ -520,8 +605,8 @@ export default function App() {
                         </div>
 
                         {/* Right Column: Preview */}
-                        <div className="h-full overflow-y-auto p-4 md:p-8 bg-gray-50/50">
-                            <div ref={previewContainerRef} className="max-w-2xl mx-auto pt-12 space-y-4">
+                        <div ref={rightColumnRef} className="h-full overflow-y-auto p-4 md:p-8 bg-gray-50/50">
+                            <div className="max-w-2xl mx-auto pt-12 space-y-4">
 
 
                                 <div
@@ -552,14 +637,7 @@ export default function App() {
                                         hideLetterLogo={hideLetterLogo}
                                         letterFont={letterFont}
                                     >
-                                        <AnimatedText
-                                            key={String(isEnvelopeOpen)} // Reset animation on open
-                                            text={text}
-                                            animationType={animationType}
-                                            font={letterFont}
-                                            fontSize={letterSize}
-                                            delay={1.5}
-                                        />
+                                        {animatedTextComponent}
                                     </Envelope>
                                 </div>
                             </div>

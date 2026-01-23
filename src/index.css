@@ -513,6 +513,29 @@ select {
   }
 }
 
+/* Override Tailwind Preflight's list-style:none reset for animated text */
+.prose ul,
+.prose ol {
+  list-style-position: outside !important;
+  margin-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.prose ul {
+  list-style-type: disc !important;
+}
+
+.prose ol {
+  list-style-type: decimal !important;
+}
+
+.prose li {
+  display: list-item !important;
+  padding-left: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
 @layer utilities {
   .pointer-events-auto {
     pointer-events: auto;
@@ -2180,4 +2203,9 @@ html {
 .ProseMirror li p {
   margin-top: 0;
   margin-bottom: 0;
+}
+
+/* Ensure empty paragraphs have height in rendered text */
+.prose p {
+  min-height: 1.5em;
 }

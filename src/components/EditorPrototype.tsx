@@ -15,6 +15,7 @@ import {
     Indent,
     Outdent,
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import UnderlineExtension from '@tiptap/extension-underline';
@@ -348,7 +349,13 @@ export function EditorPrototype({
     return (
         <div className="flex flex-col gap-4 w-full">
             {/* === SECTION 1: COMPOSE YOUR LETTER === */}
-            <div className="bg-white border border-black/5 flex flex-col" style={{ padding: '15px', gap: '20px' }}>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="bg-white border border-black/5 flex flex-col"
+                style={{ padding: '15px', gap: '20px' }}
+            >
                 <div className="flex items-center gap-1 font-mono uppercase tracking-wider" style={{ color: '#000000', fontSize: '16px' }}>
                     <span>Compose Your Letter</span>
                 </div>
@@ -441,14 +448,20 @@ export function EditorPrototype({
                                         transform: 'translate(-50%, -50%)',
                                         width: '24px',
                                         height: '24px',
-                                        backgroundColor: textColor,
+                                        backgroundColor: editor?.getAttributes('textStyle').color || textColor,
                                         border: '1px solid rgba(0,0,0,0.1)'
                                     }}
                                 />
                                 <input
                                     type="color"
-                                    value={textColor}
-                                    onChange={(e) => onTextColorChange(e.target.value)}
+                                    value={editor?.getAttributes('textStyle').color || textColor}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        editor?.chain().focus().setColor(val).run();
+                                        // onTextColorChange(val); // Decoupled to allow selection-only color
+                                        // Force update to refresh UI
+                                        forceUpdate(n => n + 1);
+                                    }}
                                     style={{
                                         position: 'absolute',
                                         top: 0,
@@ -501,7 +514,7 @@ export function EditorPrototype({
                                 if (stack) {
                                     editor?.chain().focus().setFontFamily(stack).run();
                                 }
-                                onLetterFontChange(val);
+                                // onLetterFontChange(val); // Decoupled
                             }}
                             options={[
                                 { label: 'Sans', value: 'font-editor-sans' },
@@ -537,7 +550,7 @@ export function EditorPrototype({
                             })()}
                             onChange={(val) => {
                                 editor?.chain().focus().setMark('textStyle', { fontSize: val }).run();
-                                onLetterSizeChange(val as number);
+                                // onLetterSizeChange(val as number); // Decoupled
                             }}
                             options={[12, 14, 16, 18, 20, 24, 28, 32].map(s => ({ label: s, value: s }))}
                             style={{ gap: '10px' }}
@@ -625,10 +638,16 @@ export function EditorPrototype({
                         </div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* === SECTION 2: CUSTOMIZE ENVELOPE === */}
-            <div className="bg-white border border-black/5 flex flex-col" style={{ padding: '15px', gap: '20px' }}>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="bg-white border border-black/5 flex flex-col"
+                style={{ padding: '15px', gap: '20px' }}
+            >
                 <div className="flex items-center gap-1 font-mono uppercase tracking-wider" style={{ color: '#000000', fontSize: '16px' }}>
                     <span>Customize Envelope</span>
                 </div>
@@ -882,7 +901,7 @@ export function EditorPrototype({
                                     style={{ display: 'inline-block', width: 'auto' }}
                                     className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
                                 >
-                                    Choose File
+                                    CHOOSE FILE
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -916,7 +935,7 @@ export function EditorPrototype({
                                     style={{ display: 'inline-block', width: 'auto' }}
                                     className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
                                 >
-                                    Choose File
+                                    CHOOSE FILE
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -950,7 +969,7 @@ export function EditorPrototype({
                                     style={{ display: 'inline-block', width: 'auto' }}
                                     className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
                                 >
-                                    Choose File
+                                    CHOOSE FILE
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -984,7 +1003,7 @@ export function EditorPrototype({
                                     style={{ display: 'inline-block', width: 'auto' }}
                                     className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
                                 >
-                                    Choose File
+                                    CHOOSE FILE
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -1018,7 +1037,7 @@ export function EditorPrototype({
                                     style={{ display: 'inline-block', width: 'auto' }}
                                     className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
                                 >
-                                    Choose File
+                                    CHOOSE FILE
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -1050,10 +1069,16 @@ export function EditorPrototype({
                         </div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* === SECTION 3: SHARE YOUR LETTER === */}
-            <div className="bg-white border border-black/5 flex flex-col" style={{ padding: '15px', gap: '20px' }}>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="bg-white border border-black/5 flex flex-col"
+                style={{ padding: '15px', gap: '20px' }}
+            >
                 <div className="flex items-center gap-1 font-mono uppercase tracking-wider" style={{ color: '#000000', fontSize: '16px' }}>
                     <span>Share Your Letter</span>
                 </div>
@@ -1099,7 +1124,7 @@ export function EditorPrototype({
                         </button>
                     </div>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 }

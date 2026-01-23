@@ -8,6 +8,7 @@ import navinLogo from '../assets/Navin Logo.png';
 export interface EnvelopeProps {
   onOpen: () => void;
   onClose?: () => void;
+  onFlip?: () => void;
   isOpen: boolean;
   children: React.ReactNode;
   to?: string;
@@ -55,6 +56,7 @@ function WaxSeal({ className }: { className?: string }) {
 export function Envelope({
   onOpen,
   onClose,
+  onFlip,
   isOpen,
   children,
   to = "The Google Design Team",
@@ -100,16 +102,7 @@ export function Envelope({
   return (
     <div className="flex flex-col items-center justify-center min-h-[600px] w-full p-4 perspective-1000">
 
-      {/* Backdrop to close the letter when clicking outside */}
-      {isOpen && onClose && (
-        <div
-          className="fixed inset-0 z-40 cursor-default"
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose();
-          }}
-        />
-      )}
+
 
       {/* 3D Envelope Container - moves down when letter rises */}
       <motion.div
@@ -123,7 +116,7 @@ export function Envelope({
           rotateY: { duration: 0.8, type: "spring", stiffness: 40, damping: 14 },
           y: { delay: 0.5, duration: 1.2, type: "spring", stiffness: 40, damping: 16 }
         }}
-        onClick={() => !isFlipped && setIsFlipped(true)}
+        onClick={() => { if (!isFlipped) { setIsFlipped(true); onFlip?.(); } }}
       >
         {/* Edge spines to hide gap during rotation - thickened to cover full 20px depth */}
         <div
