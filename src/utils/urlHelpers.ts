@@ -25,6 +25,9 @@ export interface LetterData {
   fromFont?: string;
   fromSize?: number;
   animationSpeed?: number;
+  // Letter Logo
+  letterLogoSrc?: string | null;
+  hideLetterLogo?: boolean;
 }
 
 export function encodeLetterData(data: LetterData): string {
@@ -44,10 +47,12 @@ export function decodeLetterData(encoded: string): LetterData | null {
 export function createPublishedURL(data: LetterData): string {
   const encoded = encodeLetterData(data);
   const url = new URL(window.location.href);
-  // Clear existing params and hash to ensure a clean URL
-  url.hash = '';
-  url.search = '';
-  url.searchParams.set('letter', encoded);
+
+  // Use HASH instead of Search Params to avoid HTTP 431 (server header limit)
+  // Hash fragments are client-side only and can be much larger.
+  url.search = ''; // Clear search params
+  url.hash = `letter=${encoded}`;
+
   return url.toString();
 }
 

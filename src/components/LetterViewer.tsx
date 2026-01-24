@@ -23,7 +23,9 @@ interface LetterViewerProps {
   animationSpeed?: number;
   sealSrc?: string;
   postmarkText?: string;
-  postmarkSrc?: string | null; // Added postmarkSrc
+  postmarkSrc?: string | null;
+  letterLogoSrc?: string;
+  hideLetterLogo?: boolean;
 }
 
 export function LetterViewer({
@@ -46,7 +48,9 @@ export function LetterViewer({
   animationSpeed = 5,
   sealSrc,
   postmarkText,
-  postmarkSrc, // Added postmarkSrc
+  postmarkSrc,
+  letterLogoSrc,
+  hideLetterLogo,
 }: LetterViewerProps) {
   const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -103,6 +107,8 @@ export function LetterViewer({
               letterColor={letterColor}
               sealSrc={sealSrc}
               postmarkText={postmarkText}
+              letterLogoSrc={letterLogoSrc}
+              hideLetterLogo={hideLetterLogo}
             >
               <AnimatedText
                 key={String(isEnvelopeOpen)}
