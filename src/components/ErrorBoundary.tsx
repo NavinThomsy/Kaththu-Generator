@@ -1,0 +1,71 @@
+import React, { Component, ErrorInfo, ReactNode } from "react";
+
+interface Props {
+    children: ReactNode;
+}
+
+interface State {
+    hasError: boolean;
+    error: Error | null;
+    errorInfo: ErrorInfo | null;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+    public state: State = {
+        hasError: false,
+        error: null,
+        errorInfo: null,
+    };
+
+    public static getDerivedStateFromError(error: Error): State {
+        return { hasError: true, error, errorInfo: null };
+    }
+
+    public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        console.error("Uncaught error:", error, errorInfo);
+        this.setState({ error, errorInfo });
+    }
+
+    public render() {
+        if (this.state.hasError) {
+            return (
+                <div style={{ padding: "20px", fontFamily: "sans-serif", color: "#333" }}>
+                    <h2 style={{ color: "#d32f2f" }}>Something went wrong.</h2>
+                    <p>Please take a screenshot of this error and send it to your developer:</p>
+                    <div style={{
+                        backgroundColor: "#f5f5f5",
+                        padding: "15px",
+                        borderRadius: "5px",
+                        overflow: "auto",
+                        fontSize: "12px",
+                        border: "1px solid #ccc",
+                        marginTop: "10px"
+                    }}>
+                        <strong>{this.state.error?.toString()}</strong>
+                        <br />
+                        <br />
+                        <details style={{ whiteSpace: "pre-wrap" }}>
+                            {this.state.errorInfo?.componentStack}
+                        </details>
+                    </div>
+                    <button
+                        onClick={() => window.location.reload()}
+                        style={{
+                            marginTop: "20px",
+                            padding: "10px 20px",
+                            backgroundColor: "#2196f3",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            fontSize: "16px"
+                        }}
+                    >
+                        Reload Page
+                    </button>
+                </div>
+            );
+        }
+
+        return this.props.children;
+    }
+}
