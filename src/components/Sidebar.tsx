@@ -18,7 +18,7 @@ interface SidebarProps {
 
 export function Sidebar({ letters, onDelete, onOpen, onClose }: SidebarProps) {
   return (
-    <div className="w-80 bg-white border-r border-black/5 flex flex-col h-screen overflow-hidden shrink-0">
+    <div className="sidebar-container bg-white border-r border-black/5 flex flex-col h-screen overflow-hidden shrink-0">
       <div className="p-4 border-b border-black/5 flex justify-between items-start">
         <div>
           <h2 className="font-mono uppercase tracking-wider text-black" style={{ fontSize: '16px' }}>

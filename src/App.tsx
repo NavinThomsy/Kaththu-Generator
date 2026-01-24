@@ -460,10 +460,10 @@ export default function App() {
     }
 
     return (
-        <div className="flex h-screen bg-gray-100 overflow-hidden font-sans">
+        <div className="flex lg:h-screen min-h-screen bg-gray-100 lg:overflow-hidden font-sans">
             {/* Sidebar (Desktop) */}
             <div
-                className={`${isSidebarOpen ? "w-80" : "w-0"} transition-all duration-300 overflow-hidden relative border-r border-gray-200 bg-white`}
+                className={`${isSidebarOpen ? "sidebar-container" : "w-0"} transition-all duration-300 overflow-hidden relative border-r border-gray-200 bg-white`}
             >
                 <Sidebar
                     letters={sentLetters}
@@ -474,22 +474,22 @@ export default function App() {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+            <div className="flex-1 flex flex-col lg:h-full h-auto lg:overflow-hidden relative">
                 {/* Toggle Sidebar Button */}
                 {!isSidebarOpen && (
                     <button
                         onClick={() => setIsSidebarOpen(true)}
-                        className="absolute top-4 left-4 z-10 p-2 bg-white rounded-lg shadow-md hover:bg-gray-50 text-gray-600"
+                        className="menu-toggle absolute top-4 z-10 p-2 bg-white rounded-lg shadow-md hover:bg-gray-50 text-gray-600"
                     >
                         <Menu className="w-5 h-5" />
                     </button>
                 )}
 
-                <div className="flex-1 overflow-hidden h-full">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 h-full gap-0">
+                <div className="flex-1 lg:overflow-hidden lg:h-full h-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 lg:h-full h-auto gap-0">
                         {/* Left Column: Editor Controls */}
-                        <div className="h-full overflow-y-auto p-4 md:p-8 border-r border-gray-200 no-scrollbar">
-                            <div className="max-w-2xl mx-auto pt-10 pb-20">
+                        <div className="lg:h-full lg:overflow-y-auto h-auto p-4 md:p-8 border-r border-gray-200 no-scrollbar">
+                            <div className="max-w-2xl mx-auto responsive-header-padding pb-20">
                                 <CyclingTitle />
                                 <EditorPrototype
                                     letterText={text}
@@ -605,8 +605,8 @@ export default function App() {
                         </div>
 
                         {/* Right Column: Preview */}
-                        <div ref={rightColumnRef} className="h-full overflow-y-auto p-4 md:p-8 bg-gray-50/50">
-                            <div className="max-w-2xl mx-auto pt-12 space-y-4">
+                        <div ref={rightColumnRef} className="lg:h-full lg:overflow-y-auto min-h-screen lg:min-h-0 p-4 md:p-8 bg-gray-50/50">
+                            <div className="max-w-2xl mx-auto pt-0 lg:pt-12 space-y-4">
 
 
                                 <div

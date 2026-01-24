@@ -80,6 +80,15 @@ export function Envelope({
 }: EnvelopeProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport for responsive animations
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Scroll hijacking removed to allow split-pane scrolling
   // Native overflow-y-auto on the container handles scrolling when cursor is over the letter.
@@ -100,7 +109,10 @@ export function Envelope({
   }, [isOpen]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[600px] w-full p-4 perspective-1000">
+    <div
+      className="flex flex-col items-center justify-center w-full p-4 perspective-1000"
+      style={{ minHeight: isMobile ? '450px' : '600px' }}
+    >
 
 
 
@@ -110,7 +122,7 @@ export function Envelope({
         style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
         animate={{
           rotateY: isFlipped ? 0 : 180,
-          y: isOpen ? 220 : 0
+          y: isOpen ? (isMobile ? 120 : 220) : 0
         }}
         transition={{
           rotateY: { duration: 0.8, type: "spring", stiffness: 40, damping: 14 },
@@ -187,7 +199,7 @@ export function Envelope({
                 x: "-50%",
                 y: "-50%",
                 z: 50,
-                height: "80vh",
+                height: isMobile ? "50vh" : "75vh",
                 scale: 1,
                 top: "0%",
                 transition: {

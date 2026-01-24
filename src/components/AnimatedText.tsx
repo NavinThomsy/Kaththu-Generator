@@ -158,18 +158,25 @@ export const AnimatedText = React.memo(({
           );
         }
 
+        // Check for void elements that cannot have children
+        const isVoid = ['br', 'img', 'hr', 'input', 'meta', 'link'].includes(tagName);
+
         return React.createElement(
           tagName,
           {
             key: i,
             style: styles,
             className: className, // Apply processed classes
-            // Copy minimal attributes if needed, mostly style is important
-            // href for links?
+            // Copy minimal attributes if needed
             href: el.getAttribute('href'),
-            target: el.getAttribute('target')
+            target: el.getAttribute('target'),
+            src: el.getAttribute('src'),
+            alt: el.getAttribute('alt'),
+            width: el.getAttribute('width'),
+            height: el.getAttribute('height'),
           },
-          renderTree(Array.from(el.childNodes), counter)
+          // Pass children only if NOT a void element
+          isVoid ? undefined : renderTree(Array.from(el.childNodes), counter)
         );
       }
 

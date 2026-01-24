@@ -361,105 +361,111 @@ export function EditorPrototype({
                 </div>
 
                 <div className="flex flex-col" style={{ gap: '5px' }}>
-                    {/* Toolbar */}
-                    <div className="flex items-center gap-2">
-                        {/* Formatting buttons */}
-                        <div className="flex border border-black/10">
-                            <button
-                                onClick={() => editor?.chain().focus().toggleBold().run()}
-                                className={`p-2 hover:bg-gray-50 border-r border-black/10 ${editor?.isActive('bold') ? 'bg-gray-200' : ''}`}
-                            >
-                                <Bold className="w-4 h-4 text-black" />
-                            </button>
-                            <button
-                                onClick={() => editor?.chain().focus().toggleItalic().run()}
-                                className={`p-2 hover:bg-gray-50 border-r border-black/10 ${editor?.isActive('italic') ? 'bg-gray-200' : ''}`}
-                            >
-                                <Italic className="w-4 h-4 text-black" />
-                            </button>
-                            <button
-                                onClick={() => editor?.chain().focus().toggleUnderline().run()}
-                                className={`p-2 hover:bg-gray-50 ${editor?.isActive('underline') ? 'bg-gray-200' : ''}`}
-                            >
-                                <Underline className="w-4 h-4 text-black" />
-                            </button>
-                        </div>
+                    {/* Toolbar - matches Figma responsive design */}
+                    <div className="flex items-center gap-1 w-full" style={{ flexWrap: 'wrap' }}>
+                        {/* Bold */}
+                        <button
+                            onClick={() => editor?.chain().focus().toggleBold().run()}
+                            className={`p-2 border border-black/10 hover:bg-gray-50 flex-shrink-0 ${editor?.isActive('bold') ? 'bg-gray-200' : 'bg-white'}`}
+                        >
+                            <Bold className="w-4 h-4 text-black" />
+                        </button>
 
-                        {/* Alignment buttons */}
-                        <div className="flex border border-black/10">
-                            <button
-                                onClick={() => editor?.chain().focus().setTextAlign('left').run()}
-                                className={`p-2 hover:bg-gray-50 border-r border-black/10 ${editor?.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : ''}`}
-                            >
-                                <AlignLeft className="w-4 h-4 text-black" />
-                            </button>
-                            <button
-                                onClick={() => editor?.chain().focus().setTextAlign('center').run()}
-                                className={`p-2 hover:bg-gray-50 border-r border-black/10 ${editor?.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : ''}`}
-                            >
-                                <AlignCenter className="w-4 h-4 text-black" />
-                            </button>
-                            <button
-                                onClick={() => editor?.chain().focus().setTextAlign('right').run()}
-                                className={`p-2 hover:bg-gray-50 ${editor?.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : ''}`}
-                            >
-                                <AlignRight className="w-4 h-4 text-black" />
-                            </button>
-                        </div>
+                        {/* Italic */}
+                        <button
+                            onClick={() => editor?.chain().focus().toggleItalic().run()}
+                            className={`p-2 border border-black/10 hover:bg-gray-50 flex-shrink-0 ${editor?.isActive('italic') ? 'bg-gray-200' : 'bg-white'}`}
+                        >
+                            <Italic className="w-4 h-4 text-black" />
+                        </button>
 
-                        {/* List buttons */}
-                        <div className="flex border border-black/10">
-                            <button
-                                onClick={() => editor?.chain().focus().toggleBulletList().run()}
-                                className={`p-2 hover:bg-gray-50 border-r border-black/10 ${editor?.isActive('bulletList') ? 'bg-gray-200' : ''}`}
-                            >
-                                <List className="w-4 h-4 text-black" />
-                            </button>
-                            <button
-                                onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-                                className={`p-2 hover:bg-gray-50 border-r border-black/10 ${editor?.isActive('orderedList') ? 'bg-gray-200' : ''}`}
-                            >
-                                <ListOrdered className="w-4 h-4 text-black" />
-                            </button>
-                            <button
-                                onClick={() => editor?.chain().focus().liftListItem('listItem').run()}
-                                disabled={!editor?.can().liftListItem('listItem')}
-                                className="p-2 hover:bg-gray-50 disabled:opacity-30 border-r border-black/10"
-                            >
-                                <Outdent className="w-4 h-4 text-black" />
-                            </button>
-                            <button
-                                onClick={() => editor?.chain().focus().sinkListItem('listItem').run()}
-                                disabled={!editor?.can().sinkListItem('listItem')}
-                                className="p-2 hover:bg-gray-50 disabled:opacity-30"
-                            >
-                                <Indent className="w-4 h-4 text-black" />
-                            </button>
-                        </div>
+                        {/* Underline */}
+                        <button
+                            onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                            className={`p-2 border border-black/10 hover:bg-gray-50 flex-shrink-0 ${editor?.isActive('underline') ? 'bg-gray-200' : 'bg-white'}`}
+                        >
+                            <Underline className="w-4 h-4 text-black" />
+                        </button>
 
-                        {/* Color picker */}
-                        <div className="flex items-center border border-black/10">
-                            <div className="relative" style={{ width: '34px', height: '34px', boxSizing: 'border-box' }}>
+                        {/* Align Left */}
+                        <button
+                            onClick={() => editor?.chain().focus().setTextAlign('left').run()}
+                            className={`p-2 border border-black/10 hover:bg-gray-50 flex-shrink-0 ${editor?.isActive({ textAlign: 'left' }) ? 'bg-gray-200' : 'bg-white'}`}
+                        >
+                            <AlignLeft className="w-4 h-4 text-black" />
+                        </button>
+
+                        {/* Align Center */}
+                        <button
+                            onClick={() => editor?.chain().focus().setTextAlign('center').run()}
+                            className={`p-2 border border-black/10 hover:bg-gray-50 flex-shrink-0 ${editor?.isActive({ textAlign: 'center' }) ? 'bg-gray-200' : 'bg-white'}`}
+                        >
+                            <AlignCenter className="w-4 h-4 text-black" />
+                        </button>
+
+                        {/* Align Right */}
+                        <button
+                            onClick={() => editor?.chain().focus().setTextAlign('right').run()}
+                            className={`p-2 border border-black/10 hover:bg-gray-50 flex-shrink-0 ${editor?.isActive({ textAlign: 'right' }) ? 'bg-gray-200' : 'bg-white'}`}
+                        >
+                            <AlignRight className="w-4 h-4 text-black" />
+                        </button>
+
+                        {/* Bullet List */}
+                        <button
+                            onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                            className={`p-2 border border-black/10 hover:bg-gray-50 flex-shrink-0 ${editor?.isActive('bulletList') ? 'bg-gray-200' : 'bg-white'}`}
+                        >
+                            <List className="w-4 h-4 text-black" />
+                        </button>
+
+                        {/* Ordered List */}
+                        <button
+                            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+                            className={`p-2 border border-black/10 hover:bg-gray-50 flex-shrink-0 ${editor?.isActive('orderedList') ? 'bg-gray-200' : 'bg-white'}`}
+                        >
+                            <ListOrdered className="w-4 h-4 text-black" />
+                        </button>
+
+
+                        {/* Outdent - Lift List Item */}
+                        <button
+                            onClick={() => editor?.chain().focus().liftListItem('listItem').run()}
+                            disabled={!editor?.can().liftListItem('listItem')}
+                            className={`p-2 border border-black/10 flex-shrink-0 ${!editor?.can().liftListItem('listItem') ? 'bg-gray-100 text-gray-300' : 'bg-white hover:bg-gray-50'}`}
+                            title="Outdent"
+                        >
+                            <Outdent className="w-4 h-4 text-black" />
+                        </button>
+
+                        {/* Indent - Sink List Item */}
+                        <button
+                            onClick={() => editor?.chain().focus().sinkListItem('listItem').run()}
+                            disabled={!editor?.can().sinkListItem('listItem')}
+                            className={`p-2 border border-black/10 flex-shrink-0 ${!editor?.can().sinkListItem('listItem') ? 'bg-gray-100 text-gray-300' : 'bg-white hover:bg-gray-50'}`}
+                            title="Indent"
+                        >
+                            <Indent className="w-4 h-4 text-black" />
+                        </button>
+
+                        {/* Color picker with dropdown chevron */}
+                        <div className="flex items-center border border-black/10 bg-white flex-shrink-0">
+                            <div className="relative flex items-center" style={{ height: '34px', paddingLeft: '8px', paddingRight: '4px' }}>
                                 <div
                                     style={{
-                                        position: 'absolute',
-                                        top: '50%',
-                                        left: '50%',
-                                        transform: 'translate(-50%, -50%)',
-                                        width: '24px',
-                                        height: '24px',
+                                        width: '20px',
+                                        height: '20px',
                                         backgroundColor: editor?.getAttributes('textStyle').color || textColor,
                                         border: '1px solid rgba(0,0,0,0.1)'
                                     }}
                                 />
+                                <ChevronDown className="w-3 h-3 text-black ml-1" />
                                 <input
                                     type="color"
                                     value={editor?.getAttributes('textStyle').color || textColor}
                                     onChange={(e) => {
                                         const val = e.target.value;
                                         editor?.chain().focus().setColor(val).run();
-                                        // onTextColorChange(val); // Decoupled to allow selection-only color
-                                        // Force update to refresh UI
                                         forceUpdate(n => n + 1);
                                     }}
                                     style={{
@@ -469,92 +475,90 @@ export function EditorPrototype({
                                         width: '100%',
                                         height: '100%',
                                         opacity: 0,
-                                        cursor: 'pointer',
-                                        padding: 0,
-                                        margin: 0
+                                        cursor: 'pointer'
                                     }}
                                 />
                             </div>
                         </div>
 
-                        {/* Spacer */}
-                        {/* Spacer */}
-                        <div className="flex-1" />
+                        {/* Spacer for desktop - pushes font/size to right on lg screens */}
+                        <div className="hidden lg:block lg:flex-1" />
 
-                        {/* Font dropdown */}
-                        <CustomDropdown
-                            value={(() => {
-                                if (!editor) return letterFont;
-                                const { from, to, empty } = editor.state.selection;
-                                if (empty) {
-                                    const attrs = editor.getAttributes('textStyle');
-                                    const commonFont = attrs.fontFamily;
-                                    if (commonFont) {
-                                        return Object.keys(FONT_STACKS).find(k => FONT_STACKS[k] === commonFont) || commonFont;
+                        {/* Font & Size dropdowns - grouped together to wrap as one unit */}
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                            {/* Font dropdown */}
+                            <CustomDropdown
+                                value={(() => {
+                                    if (!editor) return letterFont;
+                                    const { from, to, empty } = editor.state.selection;
+                                    if (empty) {
+                                        const attrs = editor.getAttributes('textStyle');
+                                        const commonFont = attrs.fontFamily;
+                                        if (commonFont) {
+                                            return Object.keys(FONT_STACKS).find(k => FONT_STACKS[k] === commonFont) || commonFont;
+                                        }
+                                        return letterFont;
                                     }
+
+                                    const fonts = new Set();
+                                    editor.state.doc.nodesBetween(from, to, (node) => {
+                                        if (node.isText) {
+                                            const mark = node.marks.find(m => m.type.name === 'textStyle' && m.attrs.fontFamily);
+                                            const stack = mark?.attrs.fontFamily;
+                                            const key = stack ? (Object.keys(FONT_STACKS).find(k => FONT_STACKS[k] === stack) || stack) : letterFont;
+                                            fonts.add(key);
+                                        }
+                                    });
+
+                                    if (fonts.size > 1) return "Mixed";
+                                    if (fonts.size === 1) return [...fonts][0];
                                     return letterFont;
-                                }
-
-                                const fonts = new Set();
-                                editor.state.doc.nodesBetween(from, to, (node) => {
-                                    if (node.isText) {
-                                        const mark = node.marks.find(m => m.type.name === 'textStyle' && m.attrs.fontFamily);
-                                        const stack = mark?.attrs.fontFamily;
-                                        const key = stack ? (Object.keys(FONT_STACKS).find(k => FONT_STACKS[k] === stack) || stack) : letterFont;
-                                        fonts.add(key);
+                                })()}
+                                onChange={(val) => {
+                                    const stack = FONT_STACKS[val as string];
+                                    if (stack) {
+                                        editor?.chain().focus().setFontFamily(stack).run();
                                     }
-                                });
+                                }}
+                                options={[
+                                    { label: 'Sans', value: 'font-editor-sans' },
+                                    { label: 'Serif', value: 'font-serif' },
+                                    { label: 'Mono', value: 'font-mono' },
+                                ]}
+                                style={{ width: '100px' }}
+                            />
 
-                                if (fonts.size > 1) return "Mixed";
-                                if (fonts.size === 1) return [...fonts][0];
-                                return letterFont;
-                            })()}
-                            onChange={(val) => {
-                                const stack = FONT_STACKS[val as string];
-                                if (stack) {
-                                    editor?.chain().focus().setFontFamily(stack).run();
-                                }
-                                // onLetterFontChange(val); // Decoupled
-                            }}
-                            options={[
-                                { label: 'Sans', value: 'font-editor-sans' },
-                                { label: 'Serif', value: 'font-serif' },
-                                { label: 'Mono', value: 'font-mono' },
-                            ]}
-                            style={{ width: '92px' }}
-                        />
+                            {/* Size dropdown */}
+                            <CustomDropdown
+                                value={(() => {
+                                    if (!editor) return letterSize;
+                                    const { from, to, empty } = editor.state.selection;
+                                    if (empty) {
+                                        const attrs = editor.getAttributes('textStyle');
+                                        if (attrs.fontSize) return Number(attrs.fontSize);
+                                        return letterSize;
+                                    }
 
-                        {/* Size dropdown */}
-                        <CustomDropdown
-                            value={(() => {
-                                if (!editor) return letterSize;
-                                const { from, to, empty } = editor.state.selection;
-                                if (empty) {
-                                    const attrs = editor.getAttributes('textStyle');
-                                    if (attrs.fontSize) return Number(attrs.fontSize);
+                                    const sizes = new Set<number>();
+                                    editor.state.doc.nodesBetween(from, to, (node) => {
+                                        if (node.isText) {
+                                            const mark = node.marks.find(m => m.type.name === 'textStyle' && m.attrs.fontSize);
+                                            const size = mark ? Number(mark.attrs.fontSize) : letterSize;
+                                            sizes.add(size);
+                                        }
+                                    });
+
+                                    if (sizes.size > 1) return "Mixed";
+                                    if (sizes.size === 1) return [...sizes][0];
                                     return letterSize;
-                                }
-
-                                const sizes = new Set<number>();
-                                editor.state.doc.nodesBetween(from, to, (node) => {
-                                    if (node.isText) {
-                                        const mark = node.marks.find(m => m.type.name === 'textStyle' && m.attrs.fontSize);
-                                        const size = mark ? Number(mark.attrs.fontSize) : letterSize;
-                                        sizes.add(size);
-                                    }
-                                });
-
-                                if (sizes.size > 1) return "Mixed";
-                                if (sizes.size === 1) return [...sizes][0];
-                                return letterSize;
-                            })()}
-                            onChange={(val) => {
-                                editor?.chain().focus().setMark('textStyle', { fontSize: val }).run();
-                                // onLetterSizeChange(val as number); // Decoupled
-                            }}
-                            options={[12, 14, 16, 18, 20, 24, 28, 32].map(s => ({ label: s, value: s }))}
-                            style={{ gap: '10px' }}
-                        />
+                                })()}
+                                onChange={(val) => {
+                                    editor?.chain().focus().setMark('textStyle', { fontSize: val }).run();
+                                }}
+                                options={[12, 14, 16, 18, 20, 24, 28, 32].map(s => ({ label: s, value: s }))}
+                                style={{ width: '60px' }}
+                            />
+                        </div>
                     </div>
 
                     {/* Rich Text Editor */}
@@ -570,7 +574,7 @@ export function EditorPrototype({
                 </div>
 
                 {/* Animation controls */}
-                <div className="flex self-stretch items-end" style={{ gap: '24px' }}>
+                <div className="responsive-row items-end" style={{ gap: '24px' }}>
                     {/* Animation Type */}
                     <div className="flex flex-col gap-2">
                         <span className="font-mono uppercase tracking-wider" style={{ color: 'rgba(0, 0, 0, 0.8)', fontSize: '12px' }}>
@@ -653,7 +657,7 @@ export function EditorPrototype({
                 </div>
 
                 {/* To and From fields */}
-                <div className="flex gap-4">
+                <div className="responsive-row">
                     {/* TO (Recipient) */}
                     <div className="flex-1 flex flex-col gap-2">
                         <span className="font-mono uppercase tracking-wider" style={{ color: 'rgba(0, 0, 0, 0.8)', fontSize: '12px' }}>
@@ -724,7 +728,7 @@ export function EditorPrototype({
                     <span className="font-mono uppercase tracking-wider" style={{ color: 'rgba(0, 0, 0, 0.8)', fontSize: '12px' }}>
                         Colors
                     </span>
-                    <div className="flex" style={{ gap: '10px' }}>
+                    <div className="responsive-row-sm">
                         {/* Envelope */}
                         <div className="flex flex-col gap-1">
                             <span className="font-mono uppercase" style={{ color: 'rgba(0, 0, 0, 0.5)', fontSize: '10px' }}>
@@ -880,7 +884,7 @@ export function EditorPrototype({
 
 
 
-                    <div className="grid grid-cols-2" style={{ gap: '10px' }}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: '10px' }}>
                         {/* Stamp */}
                         <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2">
@@ -896,10 +900,10 @@ export function EditorPrototype({
                                     Stamp
                                 </span>
                             </div>
-                            <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideStamp ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <div className={`flex flex-wrap items-center gap-3 transition-opacity duration-200 ${hideStamp ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
                                     style={{ display: 'inline-block', width: 'auto' }}
-                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
+                                    className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200 whitespace-nowrap"
                                 >
                                     CHOOSE FILE
                                     <input
@@ -909,8 +913,8 @@ export function EditorPrototype({
                                         onChange={(e) => handleImageUpload(e, onStampSrcChange, onStampFilenameChange, onHideStampChange)}
                                     />
                                 </label>
-                                <span className="font-mono text-[10px] text-gray-400 truncate max-w-[100px]">
-                                    {hideStamp ? 'No file uploaded' : (stampFilename || 'Default')}
+                                <span className="font-mono text-[10px] text-gray-400 truncate max-w-[80px] sm:max-w-[100px]">
+                                    {hideStamp ? 'No file uploaded' : (stampFilename || 'Stamp...')}
                                 </span>
                             </div>
                         </div>
@@ -930,7 +934,7 @@ export function EditorPrototype({
                                     Logo 1
                                 </span>
                             </div>
-                            <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideLogo1 ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <div className={`flex flex-wrap items-center gap-3 transition-opacity duration-200 ${hideLogo1 ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
                                     style={{ display: 'inline-block', width: 'auto' }}
                                     className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
@@ -964,7 +968,7 @@ export function EditorPrototype({
                                     Wax Seal
                                 </span>
                             </div>
-                            <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideSeal ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <div className={`flex flex-wrap items-center gap-3 transition-opacity duration-200 ${hideSeal ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
                                     style={{ display: 'inline-block', width: 'auto' }}
                                     className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
@@ -998,7 +1002,7 @@ export function EditorPrototype({
                                     Logo 2
                                 </span>
                             </div>
-                            <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideLogo2 ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <div className={`flex flex-wrap items-center gap-3 transition-opacity duration-200 ${hideLogo2 ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
                                     style={{ display: 'inline-block', width: 'auto' }}
                                     className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
@@ -1032,7 +1036,7 @@ export function EditorPrototype({
                                     Letter Logo
                                 </span>
                             </div>
-                            <div className={`flex items-center gap-3 transition-opacity duration-200 ${hideLetterLogo ? 'opacity-50 pointer-events-none' : ''}`}>
+                            <div className={`flex flex-wrap items-center gap-3 transition-opacity duration-200 ${hideLetterLogo ? 'opacity-50 pointer-events-none' : ''}`}>
                                 <label
                                     style={{ display: 'inline-block', width: 'auto' }}
                                     className="font-mono text-[10px] px-3 py-1.5 cursor-pointer rounded-none btn-purple transition-all duration-200"
