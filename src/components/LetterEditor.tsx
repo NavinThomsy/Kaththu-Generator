@@ -498,26 +498,31 @@ export function LetterEditor({
                             {/* Size dropdown */}
                             <CustomDropdown
                                 value={(() => {
-                                    if (!editor) return letterSize;
-                                    const { from, to, empty } = editor.state.selection;
-                                    if (empty) {
-                                        const attrs = editor.getAttributes('textStyle');
-                                        if (attrs.fontSize) return Number(attrs.fontSize);
+                                    if (!editor || editor.isDestroyed) return letterSize;
+                                    try {
+                                        const { from, to, empty } = editor.state.selection;
+                                        if (empty) {
+                                            const attrs = editor.getAttributes('textStyle');
+                                            if (attrs.fontSize) return Number(attrs.fontSize);
+                                            return letterSize;
+                                        }
+
+                                        const sizes = new Set<number>();
+                                        editor.state.doc.nodesBetween(from, to, (node) => {
+                                            if (node.isText) {
+                                                const mark = node.marks.find(m => m.type.name === 'textStyle' && m.attrs.fontSize);
+                                                const size = mark ? Number(mark.attrs.fontSize) : letterSize;
+                                                sizes.add(size);
+                                            }
+                                        });
+
+                                        if (sizes.size > 1) return "Mixed";
+                                        if (sizes.size === 1) return [...sizes][0];
+                                        return letterSize;
+                                    } catch (e) {
+                                        // Editor view might not be ready
                                         return letterSize;
                                     }
-
-                                    const sizes = new Set<number>();
-                                    editor.state.doc.nodesBetween(from, to, (node) => {
-                                        if (node.isText) {
-                                            const mark = node.marks.find(m => m.type.name === 'textStyle' && m.attrs.fontSize);
-                                            const size = mark ? Number(mark.attrs.fontSize) : letterSize;
-                                            sizes.add(size);
-                                        }
-                                    });
-
-                                    if (sizes.size > 1) return "Mixed";
-                                    if (sizes.size === 1) return [...sizes][0];
-                                    return letterSize;
                                 })()}
                                 onChange={(val) => {
                                     editor?.chain().focus().setMark('textStyle', { fontSize: val }).run();
