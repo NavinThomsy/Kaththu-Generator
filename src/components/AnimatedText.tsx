@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 
 export type AnimationType = 'fade-in' | 'word-by-word' | 'character-by-character' | 'typewriter';
@@ -9,8 +9,14 @@ interface AnimatedTextProps {
   animationType: AnimationType;
   font?: string;
   fontSize?: number;
+  textColor?: string;
   delay?: number; // Delay in seconds before animation starts
   animationSpeed?: number; // 1 (slowest) to 10 (fastest), default 5
+}
+
+// Global counter for delays
+class IndexCounter {
+  value = 0;
 }
 
 export const AnimatedText = React.memo(({
@@ -18,50 +24,15 @@ export const AnimatedText = React.memo(({
   animationType,
   font = "font-sans",
   fontSize = 16,
+  textColor = "#000000",
   delay = 0,
   animationSpeed = 5
 }: AnimatedTextProps) => {
-  const [displayedText, setDisplayedText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isDelayedStart, setIsDelayedStart] = useState(false);
 
-  useEffect(() => {
-    // Reset animation when text or animation type changes
-    setDisplayedText('');
-    setCurrentIndex(0);
-    setIsDelayedStart(false);
+  const containerClass = clsx("prose prose-sm max-w-none", font);
+  const textStyle = { fontSize, color: textColor };
 
-    // Initial delay timeout
-    const timer = setTimeout(() => {
-      setIsDelayedStart(true);
-    }, delay * 1000);
-
-    return () => clearTimeout(timer);
-  }, [text, animationType, delay]);
-
-  useEffect(() => {
-    if (animationType === 'typewriter' && isDelayedStart) {
-      if (currentIndex < text.length) {
-        const interval = 50 / (animationSpeed / 5);
-        const timeout = setTimeout(() => {
-          setDisplayedText(text.slice(0, currentIndex + 1));
-          setCurrentIndex(currentIndex + 1);
-        }, interval);
-        return () => clearTimeout(timeout);
-      }
-    }
-  }, [currentIndex, text, animationType, isDelayedStart, animationSpeed]);
-
-  const textStyle = {
-    fontSize: fontSize
-  };
-
-  const containerClass = clsx("whitespace-pre-wrap prose prose-sm max-w-none", font);
-
-  if (!isDelayedStart && animationType === 'typewriter') {
-    return <div className={containerClass} style={textStyle}></div>;
-  }
-
+  // --- Fade In (Simple) ---
   if (animationType === 'fade-in') {
     return (
       <motion.div
@@ -75,54 +46,149 @@ export const AnimatedText = React.memo(({
     );
   }
 
-  if (animationType === 'word-by-word') {
-    const words = React.useMemo(() => text.split(' '), [text]);
-    // Use key to force re-render if delay changes, though usually it's static per session
-    // Wait, motion transition delay is absolute. We just add `delay` to `index * 0.1`
-    return (
-      <div className={containerClass} style={textStyle}>
-        {words.map((word, index) => (
-          <motion.span
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 / (animationSpeed / 5), delay: delay + (index * 0.1 / (animationSpeed / 5)) }}
-          >
-            {word}{index < words.length - 1 ? ' ' : ''}
-          </motion.span>
-        ))}
-      </div>
-    );
-  }
+  // --- Granular Animations (Complex) ---
+  // Parse HTML string into DOM nodes
+  const parsedNodes = useMemo(() => {
+    if (typeof document === 'undefined') return [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(text, 'text/html');
+    return Array.from(doc.body.childNodes);
+  }, [text]);
 
-  if (animationType === 'character-by-character') {
-    const characters = React.useMemo(() => text.split(''), [text]);
-    return (
-      <div className={containerClass} style={textStyle}>
-        {characters.map((char, index) => (
-          <motion.span
-            key={index}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.1 / (animationSpeed / 5), delay: delay + (index * 0.03 / (animationSpeed / 5)) }}
-          >
-            {char}
-          </motion.span>
-        ))}
-      </div>
-    );
-  }
+  // Recursively render nodes
+  // We use a mutable counter to track the global index of the animated chunk (word or char)
+  const renderTree = (nodes: Node[], counter: IndexCounter): React.ReactNode => {
+    return nodes.map((node, i) => {
+      // 1. Text Node -> Split and Animate
+      if (node.nodeType === Node.TEXT_NODE) {
+        const content = node.textContent || "";
 
-  if (animationType === 'typewriter') {
-    return (
-      <div className={containerClass} style={textStyle}>
-        {displayedText}
-      </div>
-    );
-  }
+        // Define Splitting Logic
+        let chunks: string[] = [];
+        let delimiter = "";
 
-  // For other animation types, render HTML directly without animation for now
-  return <div className={containerClass} style={textStyle} dangerouslySetInnerHTML={{ __html: text }} />;
+        if (animationType === 'word-by-word') {
+          // preserve spaces by splitting on spaces but including them? 
+          // Simplest: split by space. 
+          chunks = content.split(' ');
+          delimiter = " ";
+        } else {
+          // character or typewriter
+          chunks = content.split('');
+          delimiter = "";
+        }
+
+        return (
+          <React.Fragment key={i}>
+            {chunks.map((chunk, j) => {
+              const currentDelay = delay + (counter.value * (animationType === 'word-by-word' ? 0.1 : 0.03) / (animationSpeed / 5));
+              counter.value++;
+
+              // Typewriter: appear instantly (duration 0)
+              // Others: fade/slide in
+              const isTypewriter = animationType === 'typewriter';
+
+              const transition = {
+                duration: isTypewriter ? 0 : (animationType === 'word-by-word' ? 0.3 : 0.1) / (animationSpeed / 5),
+                delay: currentDelay
+              };
+
+              const initial = isTypewriter ? { opacity: 0 } : { opacity: 0, y: animationType === 'word-by-word' ? 10 : 0 };
+              const animate = isTypewriter ? { opacity: 1 } : { opacity: 1, y: 0 };
+
+              return (
+                <motion.span
+                  key={j}
+                  initial={initial}
+                  animate={animate}
+                  transition={transition}
+                >
+                  {chunk}{j < chunks.length - 1 ? delimiter : ''}
+                </motion.span>
+              );
+            })}
+          </React.Fragment>
+        );
+      }
+
+      // 2. Element Node -> Preserve Style & Recurse
+      else if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement;
+        const tagName = el.tagName.toLowerCase();
+
+        // Convert CSSStyleDeclaration to React Style object
+        const styles: React.CSSProperties = {};
+        for (let k = 0; k < el.style.length; k++) {
+          const prop = el.style[k];
+          // @ts-ignore
+          styles[prop.replace(/-./g, x => x[1].toUpperCase())] = el.style.getPropertyValue(prop);
+        }
+
+        // Preserve Classes and Enforce List Styles
+        let className = el.getAttribute('class') || "";
+
+        if (tagName === 'ul') {
+          className = clsx(className, "list-outside ml-6 my-2");
+          styles.listStyleType = 'disc';
+        } else if (tagName === 'ol') {
+          className = clsx(className, "list-outside ml-6 my-2");
+          styles.listStyleType = 'decimal';
+        } else if (tagName === 'li') {
+          className = clsx(className, "pl-1 mb-1");
+          styles.display = 'list-item';
+
+          // Animate the li element so the bullet/number appears with the content
+          const liDelay = delay + (counter.value * (animationType === 'word-by-word' ? 0.1 : 0.03) / (animationSpeed / 5));
+          const isTypewriter = animationType === 'typewriter';
+
+          return (
+            <motion.li
+              key={i}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                duration: isTypewriter ? 0 : 0.1 / (animationSpeed / 5),
+                delay: liDelay
+              }}
+              style={styles}
+              className={className}
+            >
+              {renderTree(Array.from(el.childNodes), counter)}
+            </motion.li>
+          );
+        }
+
+        // Check for void elements that cannot have children
+        const isVoid = ['br', 'img', 'hr', 'input', 'meta', 'link'].includes(tagName);
+
+        return React.createElement(
+          tagName,
+          {
+            key: i,
+            style: styles,
+            className: className, // Apply processed classes
+            // Copy minimal attributes if needed
+            href: el.getAttribute('href'),
+            target: el.getAttribute('target'),
+            src: el.getAttribute('src'),
+            alt: el.getAttribute('alt'),
+            width: el.getAttribute('width'),
+            height: el.getAttribute('height'),
+          },
+          // Pass children only if NOT a void element
+          isVoid ? undefined : renderTree(Array.from(el.childNodes), counter)
+        );
+      }
+
+      return null;
+    });
+  };
+
+  return (
+    <div className={containerClass} style={textStyle}>
+      {renderTree(parsedNodes, new IndexCounter())}
+    </div>
+  );
 });
 
 AnimatedText.displayName = 'AnimatedText';

@@ -8,6 +8,7 @@ import navinLogo from '../assets/Navin Logo.png';
 export interface EnvelopeProps {
   onOpen: () => void;
   onClose?: () => void;
+  onFlip?: () => void;
   isOpen: boolean;
   children: React.ReactNode;
   to?: string;
@@ -25,6 +26,9 @@ export interface EnvelopeProps {
   letterColor?: string;
   sealSrc?: string;
   postmarkText?: string;
+  letterLogoSrc?: string;
+  hideLetterLogo?: boolean;
+  letterFont?: string;
 }
 
 // Wax Seal SVG
@@ -52,6 +56,7 @@ function WaxSeal({ className }: { className?: string }) {
 export function Envelope({
   onOpen,
   onClose,
+  onFlip,
   isOpen,
   children,
   to = "The Google Design Team",
@@ -68,78 +73,25 @@ export function Envelope({
   letterColor = "#ffffff",
   sealSrc,
   postmarkSrc,
-  postmarkText = "LONDON"
+  postmarkText = "LONDON",
+  letterLogoSrc,
+  hideLetterLogo = false,
+  letterFont = "font-serif"
 }: EnvelopeProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Allow scrolling from outside the container when open
+  // Detect mobile viewport for responsive animations
   useEffect(() => {
-    if (!isOpen) return;
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-    let destination = scrollRef.current?.scrollTop || 0;
-    let isAnimating = false;
-    let rafId: number;
-
-    const smoothScroll = () => {
-      if (!scrollRef.current) return;
-      const current = scrollRef.current.scrollTop;
-      const diff = destination - current;
-
-      if (Math.abs(diff) < 1) {
-        scrollRef.current.scrollTop = destination;
-        isAnimating = false;
-        return;
-      }
-
-      // Linear interpolation (lerp) for smoothness
-      scrollRef.current.scrollTop = current + diff * 0.15;
-      rafId = requestAnimationFrame(smoothScroll);
-    };
-
-    const handleWheel = (e: WheelEvent) => {
-      // If the scroll target is NOT inside our scroll container (and not its child), manual scroll
-      if (scrollRef.current && !scrollRef.current.contains(e.target as Node)) {
-        // Prevent default only if we are handling it? actually native scroll is fine on body usually.
-        // But we want to 'capture' it.
-
-        // Sync destination if not animating (e.g. after a native scroll interaction)
-        if (!isAnimating && scrollRef.current) {
-          destination = scrollRef.current.scrollTop;
-        }
-
-        destination += e.deltaY;
-
-        // Clamp destination
-        if (scrollRef.current) {
-          const maxScroll = scrollRef.current.scrollHeight - scrollRef.current.clientHeight;
-          destination = Math.max(0, Math.min(destination, maxScroll));
-        }
-
-        if (!isAnimating) {
-          isAnimating = true;
-          rafId = requestAnimationFrame(smoothScroll);
-        }
-      }
-    };
-
-    // Listen for native scroll to keep destination in sync
-    const handleNativeScroll = () => {
-      if (!isAnimating && scrollRef.current) {
-        destination = scrollRef.current.scrollTop;
-      }
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    const box = scrollRef.current;
-    if (box) box.addEventListener('scroll', handleNativeScroll);
-
-    return () => {
-      window.removeEventListener('wheel', handleWheel);
-      if (box) box.removeEventListener('scroll', handleNativeScroll);
-      cancelAnimationFrame(rafId);
-    };
-  }, [isOpen]);
+  // Scroll hijacking removed to allow split-pane scrolling
+  // Native overflow-y-auto on the container handles scrolling when cursor is over the letter.
 
   // Derive colors - memoize if possible, but simple enough for now
   const mainColor = paperColor;
@@ -157,7 +109,12 @@ export function Envelope({
   }, [isOpen]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[600px] w-full p-4 perspective-1000">
+    <div
+      className="flex flex-col items-center justify-center w-full p-4 perspective-1000"
+      style={{ minHeight: isMobile ? '450px' : '600px' }}
+    >
+
+
 
       {/* 3D Envelope Container - moves down when letter rises */}
       <motion.div
@@ -165,13 +122,13 @@ export function Envelope({
         style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
         animate={{
           rotateY: isFlipped ? 0 : 180,
-          y: isOpen ? 220 : 0
+          y: isOpen ? (isMobile ? 120 : 220) : 0
         }}
         transition={{
           rotateY: { duration: 0.8, type: "spring", stiffness: 40, damping: 14 },
           y: { delay: 0.5, duration: 1.2, type: "spring", stiffness: 40, damping: 16 }
         }}
-        onClick={() => !isFlipped && setIsFlipped(true)}
+        onClick={() => { if (!isFlipped) { setIsFlipped(true); onFlip?.(); } }}
       >
         {/* Edge spines to hide gap during rotation - thickened to cover full 20px depth */}
         <div
@@ -220,7 +177,7 @@ export function Envelope({
 
           {/* 2. The Letter */}
           <motion.div
-            className="absolute left-1/2 shadow-lg p-8 text-gray-800 font-serif origin-top backface-hidden overflow-hidden"
+            className={clsx("absolute left-1/2 shadow-lg p-8 text-gray-800 origin-top backface-hidden overflow-hidden", letterFont)}
             style={{
               transformStyle: 'preserve-3d',
               width: 'min(90%, 600px)',
@@ -242,7 +199,7 @@ export function Envelope({
                 x: "-50%",
                 y: "-50%",
                 z: 50,
-                height: "65vh",
+                height: isMobile ? "50vh" : "75vh",
                 scale: 1,
                 top: "0%",
                 transition: {
@@ -293,15 +250,22 @@ export function Envelope({
             `}</style>
             <div ref={scrollRef} className="custom-scrollbar relative z-10 h-full overflow-y-auto pr-2">
               {/* User Logo (In Flow) - mb-6 for more gap, opacity-100 for visibility */}
-              <div
-                className="relative mt-4 ml-6 mb-6 w-10 h-10 mix-blend-multiply z-20"
-                style={{ width: '40px', height: '40px' }}
-              >
-                <img src={navinLogo} alt="Logo" className="w-full h-full object-contain" />
-              </div>
+              {/* Letter Logo */}
+              {!hideLetterLogo && (
+                <div
+                  className="relative mt-4 ml-6 mb-6 w-10 h-10 mix-blend-multiply z-20"
+                  style={{ width: '40px', height: '40px' }}
+                >
+                  <img src={letterLogoSrc || navinLogo} alt="Logo" className="w-full h-full object-contain" />
+                </div>
+              )}
 
               <div className="pl-6 md:pl-8">
-                {children}
+                {typeof children === 'string' ? (
+                  <div dangerouslySetInnerHTML={{ __html: children }} />
+                ) : (
+                  children
+                )}
               </div>
             </div>
           </motion.div>
@@ -429,11 +393,12 @@ export function Envelope({
           <div className="absolute inset-4 border-2 opacity-30 pointer-events-none rounded-sm" style={{ borderColor: darkerColor }}></div>
 
           {/* Stamp (Top Right) */}
-          <div className="absolute top-6 right-6 w-20 h-24 transform rotate-3 shadow-sm border border-gray-300 p-1 bg-white overflow-hidden">
-            {stampSrc ? (
+          {/* Stamp (Top Right) */}
+          {stampSrc && (
+            <div className="absolute top-6 right-6 w-20 h-24 transform rotate-3 shadow-sm border border-gray-300 p-1 bg-white overflow-hidden">
               <img src={stampSrc} alt="Stamp" className="w-full h-full object-cover" />
-            ) : null}
-          </div>
+            </div>
+          )}
 
           {/* Postmark overlay */}
           {(postmarkText || postmarkSrc) && (

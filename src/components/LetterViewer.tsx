@@ -23,7 +23,9 @@ interface LetterViewerProps {
   animationSpeed?: number;
   sealSrc?: string;
   postmarkText?: string;
-  postmarkSrc?: string | null; // Added postmarkSrc
+  postmarkSrc?: string | null;
+  letterLogoSrc?: string;
+  hideLetterLogo?: boolean;
 }
 
 export function LetterViewer({
@@ -46,15 +48,29 @@ export function LetterViewer({
   animationSpeed = 5,
   sealSrc,
   postmarkText,
-  postmarkSrc, // Added postmarkSrc
+  postmarkSrc,
+  letterLogoSrc,
+  hideLetterLogo,
 }: LetterViewerProps) {
   const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
   const [resetKey, setResetKey] = useState(0);
 
   const handleReset = () => {
     setIsEnvelopeOpen(false);
+    setIsFlipped(false);
     // Force remount to skip closing animation
     setTimeout(() => setResetKey(prev => prev + 1), 100);
+  };
+
+  // Determine instruction text based on state
+  const getInstructionText = () => {
+    if (!isFlipped) {
+      return "tap or click to flip letter";
+    } else if (!isEnvelopeOpen) {
+      return "tap or click to open the seal";
+    }
+    return null;
   };
 
   return (
@@ -75,6 +91,7 @@ export function LetterViewer({
               key={resetKey}
               onOpen={() => setIsEnvelopeOpen(true)}
               onClose={() => setIsEnvelopeOpen(false)}
+              onFlip={() => setIsFlipped(true)}
               isOpen={isEnvelopeOpen}
               to={toText}
               from={fromText}
@@ -90,6 +107,8 @@ export function LetterViewer({
               letterColor={letterColor}
               sealSrc={sealSrc}
               postmarkText={postmarkText}
+              letterLogoSrc={letterLogoSrc}
+              hideLetterLogo={hideLetterLogo}
             >
               <AnimatedText
                 key={String(isEnvelopeOpen)}
@@ -103,7 +122,15 @@ export function LetterViewer({
             </Envelope>
           </div>
         </div>
+
+        {/* Contextual Instructions */}
+        <div className="text-center mt-6">
+          <p className="text-xs text-gray-500 font-mono tracking-wide">
+            {getInstructionText()}
+          </p>
+        </div>
       </div>
     </div>
   );
 }
+
