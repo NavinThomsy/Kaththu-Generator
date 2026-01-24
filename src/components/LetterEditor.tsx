@@ -307,10 +307,14 @@ export function LetterEditor({
 
     // Update editor styling when font/size/color changes
     useEffect(() => {
-        if (editor) {
-            editor.view.dom.style.fontFamily = letterFont === 'Mono' ? 'monospace' : letterFont === 'Serif' ? 'serif' : 'sans-serif';
-            editor.view.dom.style.fontSize = `${letterSize}px`;
-            editor.view.dom.style.color = textColor;
+        if (editor && !editor.isDestroyed) {
+            try {
+                editor.view.dom.style.fontFamily = letterFont === 'Mono' ? 'monospace' : letterFont === 'Serif' ? 'serif' : 'sans-serif';
+                editor.view.dom.style.fontSize = `${letterSize}px`;
+                editor.view.dom.style.color = textColor;
+            } catch (e) {
+                // Ignore view access errors during mount/unmount
+            }
         }
     }, [editor, letterFont, letterSize, textColor]);
 
@@ -422,14 +426,18 @@ export function LetterEditor({
                                     style={{
                                         width: '20px',
                                         height: '20px',
-                                        backgroundColor: editor?.getAttributes('textStyle').color || textColor,
+                                        backgroundColor: (() => {
+                                            try { return editor?.getAttributes('textStyle').color || textColor } catch { return textColor }
+                                        })(),
                                         border: '1px solid rgba(0,0,0,0.1)'
                                     }}
                                 />
                                 <ChevronDown className="w-3 h-3 text-black ml-1" />
                                 <input
                                     type="color"
-                                    value={editor?.getAttributes('textStyle').color || textColor}
+                                    value={(() => {
+                                        try { return editor?.getAttributes('textStyle').color || textColor } catch { return textColor }
+                                    })()}
                                     onChange={(e) => {
                                         const val = e.target.value;
                                         editor?.chain().focus().setColor(val).run();
@@ -457,29 +465,33 @@ export function LetterEditor({
                             <CustomDropdown
                                 value={(() => {
                                     if (!editor) return letterFont;
-                                    const { from, to, empty } = editor.state.selection;
-                                    if (empty) {
-                                        const attrs = editor.getAttributes('textStyle');
-                                        const commonFont = attrs.fontFamily;
-                                        if (commonFont) {
-                                            return Object.keys(FONT_STACKS).find(k => FONT_STACKS[k] === commonFont) || commonFont;
+                                    try {
+                                        const { from, to, empty } = editor.state.selection;
+                                        if (empty) {
+                                            const attrs = editor.getAttributes('textStyle');
+                                            const commonFont = attrs.fontFamily;
+                                            if (commonFont) {
+                                                return Object.keys(FONT_STACKS).find(k => FONT_STACKS[k] === commonFont) || commonFont;
+                                            }
+                                            return letterFont;
                                         }
+
+                                        const fonts = new Set();
+                                        editor.state.doc.nodesBetween(from, to, (node) => {
+                                            if (node.isText) {
+                                                const mark = node.marks.find(m => m.type.name === 'textStyle' && m.attrs.fontFamily);
+                                                const stack = mark?.attrs.fontFamily;
+                                                const key = stack ? (Object.keys(FONT_STACKS).find(k => FONT_STACKS[k] === stack) || stack) : letterFont;
+                                                fonts.add(key);
+                                            }
+                                        });
+
+                                        if (fonts.size > 1) return "Mixed";
+                                        if (fonts.size === 1) return [...fonts][0];
+                                        return letterFont;
+                                    } catch (e) {
                                         return letterFont;
                                     }
-
-                                    const fonts = new Set();
-                                    editor.state.doc.nodesBetween(from, to, (node) => {
-                                        if (node.isText) {
-                                            const mark = node.marks.find(m => m.type.name === 'textStyle' && m.attrs.fontFamily);
-                                            const stack = mark?.attrs.fontFamily;
-                                            const key = stack ? (Object.keys(FONT_STACKS).find(k => FONT_STACKS[k] === stack) || stack) : letterFont;
-                                            fonts.add(key);
-                                        }
-                                    });
-
-                                    if (fonts.size > 1) return "Mixed";
-                                    if (fonts.size === 1) return [...fonts][0];
-                                    return letterFont;
                                 })()}
                                 onChange={(val) => {
                                     const stack = FONT_STACKS[val as string];
