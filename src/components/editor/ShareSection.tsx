@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 interface ShareSectionProps {
     generatedUrl: string;
-    onSaveAndShare: (url?: string) => void;
+    onSaveAndShare: (url?: string, shouldOpen?: boolean) => void;
     isUploading?: boolean;
 }
 
@@ -23,13 +23,13 @@ export function ShareSection({
     const handleSaveClick = async () => {
         if (isUploading) return;
 
-        // If we already have one, use it
+        // If we already have one, use it -> OPEN IT
         if (shortUrl) {
-            onSaveAndShare(shortUrl);
+            onSaveAndShare(shortUrl, true);
             return;
         }
 
-        // Otherwise generate one
+        // Otherwise generate one -> SAVE BUT DON'T OPEN AUTOMATICALLY
         setIsShortening(true);
         try {
             const res = await fetch(`/api/shorten?url=${encodeURIComponent(generatedUrl)}`);
@@ -37,12 +37,13 @@ export function ShareSection({
                 const data = await res.json();
                 if (data.shortUrl) {
                     setShortUrl(data.shortUrl);
-                    onSaveAndShare(data.shortUrl);
+                    // Save to history but DO NOT OPEN
+                    onSaveAndShare(data.shortUrl, false);
                     return;
                 }
             }
             // Fallback
-            onSaveAndShare();
+            onSaveAndShare(); // Uses default true (open)
         } catch (e) {
             console.error("Shortening error:", e);
             onSaveAndShare();

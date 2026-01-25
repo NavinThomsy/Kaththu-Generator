@@ -185,13 +185,12 @@ export default function App() {
 
     const handleDeleteLetter = (id: string) => {
         const newLetters = sentLetters.filter((l) => l.id !== id);
-        setSentLetters(newLetters);
         localStorage.setItem("sent_letters", JSON.stringify(newLetters));
     };
 
     const handleOpenSavedLink = (url: string) => window.open(url, "_blank");
 
-    const handleSaveAndShare = (overrideUrl?: string) => {
+    const handleSaveAndShare = (overrideUrl?: string, shouldOpen: boolean = true) => {
         const url = overrideUrl || generatedUrl;
 
         const newLetter: SavedLetter = {
@@ -206,7 +205,9 @@ export default function App() {
         setSentLetters(updatedLetters);
         localStorage.setItem("sent_letters", JSON.stringify(updatedLetters));
 
-        window.open(url, "_blank");
+        if (shouldOpen) {
+            window.open(url, "_blank");
+        }
     };
 
     const handleBackToEditor = () => {

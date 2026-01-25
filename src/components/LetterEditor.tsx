@@ -155,7 +155,7 @@ export interface LetterEditorProps {
     // Actions
     generatedUrl: string;
     onCopyUrl: () => void;
-    onSaveAndShare: (url?: string) => void;
+    onSaveAndShare: (url?: string, shouldOpen?: boolean) => void;
 }
 
 export function LetterEditor({
