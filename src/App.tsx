@@ -191,8 +191,8 @@ export default function App() {
 
     const handleOpenSavedLink = (url: string) => window.open(url, "_blank");
 
-    const handleSaveAndShare = () => {
-        const url = generatedUrl;
+    const handleSaveAndShare = (overrideUrl?: string) => {
+        const url = overrideUrl || generatedUrl;
 
         const newLetter: SavedLetter = {
             id: Date.now().toString(),

@@ -155,7 +155,7 @@ export interface LetterEditorProps {
     // Actions
     generatedUrl: string;
     onCopyUrl: () => void;
-    onSaveAndShare: () => void;
+    onSaveAndShare: (url?: string) => void;
 }
 
 export function LetterEditor({
@@ -239,6 +239,9 @@ export function LetterEditor({
             if (setHide) setHide(false);
 
             if (setter) {
+                // Track upload start
+                setUploadingCount(prev => prev + 1);
+
                 try {
                     // First compress the image
                     const compressed = await readAndCompressImage(file);
@@ -254,9 +257,14 @@ export function LetterEditor({
                         } else {
                             console.warn('ImgBB upload failed, keeping local base64');
                         }
+                    }).finally(() => {
+                        // Track upload finish (success or fail)
+                        setUploadingCount(prev => Math.max(0, prev - 1));
                     });
                 } catch (err) {
                     console.error('Failed to process image:', err);
+                    setUploadingCount(prev => Math.max(0, prev - 1));
+
                     // Fallback to uncompressed base64
                     const reader = new FileReader();
                     reader.onload = (ev) => {
@@ -274,6 +282,8 @@ export function LetterEditor({
     // --- TipTap Rich Text Editor ---
     // State to force re-render for toolbar updates
     const [, forceUpdate] = useState(0);
+    // Track active uploads to show spinner
+    const [uploadingCount, setUploadingCount] = useState(0);
 
     const editor = useEditor({
         extensions: [
@@ -646,6 +656,7 @@ export function LetterEditor({
                 <ShareSection
                     generatedUrl={generatedUrl}
                     onSaveAndShare={onSaveAndShare}
+                    isUploading={uploadingCount > 0}
                 />
             </motion.div>
         </div>

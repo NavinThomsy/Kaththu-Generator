@@ -2,14 +2,56 @@ import React, { useState } from "react";
 
 interface ShareSectionProps {
     generatedUrl: string;
-    onSaveAndShare: () => void;
+    onSaveAndShare: (url?: string) => void;
+    isUploading?: boolean;
 }
 
 export function ShareSection({
     generatedUrl,
     onSaveAndShare,
+    isUploading = false,
 }: ShareSectionProps) {
+    const [shortUrl, setShortUrl] = useState('');
+    const [isShortening, setIsShortening] = useState(false);
     const [copyFeedback, setCopyFeedback] = useState(false);
+
+    // Reset short URL when long URL changes
+    React.useEffect(() => {
+        setShortUrl('');
+    }, [generatedUrl]);
+
+    const handleSaveClick = async () => {
+        if (isUploading) return;
+
+        // If we already have one, use it
+        if (shortUrl) {
+            onSaveAndShare(shortUrl);
+            return;
+        }
+
+        // Otherwise generate one
+        setIsShortening(true);
+        try {
+            const res = await fetch(`/api/shorten?url=${encodeURIComponent(generatedUrl)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.shortUrl) {
+                    setShortUrl(data.shortUrl);
+                    onSaveAndShare(data.shortUrl);
+                    return;
+                }
+            }
+            // Fallback
+            onSaveAndShare();
+        } catch (e) {
+            console.error("Shortening error:", e);
+            onSaveAndShare();
+        } finally {
+            setIsShortening(false);
+        }
+    };
+
+    const displayUrl = shortUrl || generatedUrl;
 
     return (
         <div className="flex flex-col gap-2 relative">
@@ -20,16 +62,16 @@ export function ShareSection({
                 <div className="relative flex-none group" style={{ width: '50%' }}>
                     <input
                         type="text"
-                        value={generatedUrl}
+                        value={displayUrl}
                         readOnly
                         onClick={() => {
-                            if (generatedUrl) {
-                                navigator.clipboard.writeText(generatedUrl);
+                            if (displayUrl) {
+                                navigator.clipboard.writeText(displayUrl);
                                 setCopyFeedback(true);
                                 setTimeout(() => setCopyFeedback(false), 2000);
                             }
                         }}
-                        className="w-full border border-black/10 px-3 font-mono text-xs text-gray-400 bg-white focus:outline-none cursor-pointer hover:bg-gray-50 transition-colors"
+                        className={`w-full border px-3 font-mono text-xs focus:outline-none cursor-pointer hover:bg-gray-50 transition-colors ${shortUrl ? 'border-green-500 text-green-700 bg-green-50' : 'border-black/10 text-gray-400 bg-white'}`}
                         style={{ height: '34px', boxSizing: 'border-box' }}
                         title="Click to copy"
                     />
@@ -41,10 +83,23 @@ export function ShareSection({
                     )}
                 </div>
                 <button
-                    onClick={onSaveAndShare}
-                    className="font-mono text-[10px] font-medium px-4 py-2 uppercase tracking-wider rounded-none shrink-0 btn-purple transition-all min-w-[80px] flex items-center justify-center"
+                    onClick={handleSaveClick}
+                    disabled={isUploading || isShortening}
+                    className={`font-mono text-[10px] font-medium px-4 py-2 uppercase tracking-wider rounded-none shrink-0 btn-purple transition-all min-w-[80px] flex items-center justify-center gap-2 ${(isUploading || isShortening) ? 'opacity-50 cursor-wait' : ''}`}
                 >
-                    SAVE & VIEW
+                    {isUploading ? (
+                        <>
+                            <span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span>
+                            UPLOADING...
+                        </>
+                    ) : isShortening ? (
+                        <>
+                            <span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span>
+                            SHORTENING...
+                        </>
+                    ) : (
+                        'SAVE & VIEW'
+                    )}
                 </button>
             </div>
         </div>
