@@ -1,6 +1,7 @@
 {
       "name": "Text Animation Web App",
       "version": "0.1.0",
+      "type": "module",
       "private": true,
       "dependencies": {
             "@paper-design/shaders-react": "^0.0.70",
