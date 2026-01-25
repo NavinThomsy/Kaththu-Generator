@@ -30,13 +30,20 @@ export interface LetterData {
   hideLetterLogo?: boolean;
 }
 
+import LZString from 'lz-string';
+
 export function encodeLetterData(data: LetterData): string {
   const json = JSON.stringify(data);
-  return btoa(encodeURIComponent(json));
+  return 'lz_' + LZString.compressToEncodedURIComponent(json);
 }
 
 export function decodeLetterData(encoded: string): LetterData | null {
   try {
+    if (encoded.startsWith('lz_')) {
+      const json = LZString.decompressFromEncodedURIComponent(encoded.slice(3));
+      return json ? JSON.parse(json) : null;
+    }
+    // Fallback for old base64 links
     const json = decodeURIComponent(atob(encoded));
     return JSON.parse(json);
   } catch (e) {
