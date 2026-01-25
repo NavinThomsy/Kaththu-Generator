@@ -177,7 +177,7 @@ export function Envelope({
 
           {/* 2. The Letter */}
           <motion.div
-            className={clsx("absolute left-1/2 shadow-lg p-8 text-gray-800 origin-top backface-hidden overflow-hidden", letterFont)}
+            className={clsx("absolute left-1/2 shadow-lg p-8 text-gray-800 origin-top backface-hidden overflow-hidden pointer-events-auto select-text", letterFont)}
             style={{
               transformStyle: 'preserve-3d',
               width: 'min(90%, 600px)',
@@ -199,7 +199,7 @@ export function Envelope({
                 x: "-50%",
                 y: "-50%",
                 z: 50,
-                height: isMobile ? "50vh" : "75vh",
+                height: isMobile ? "60vh" : "75vh",
                 scale: 1,
                 top: "0%",
                 transition: {
@@ -248,7 +248,7 @@ export function Envelope({
                 scrollbar-width: none;
               }
             `}</style>
-            <div ref={scrollRef} className="custom-scrollbar relative z-10 h-full overflow-y-auto pr-2">
+            <div ref={scrollRef} className="custom-scrollbar relative z-10 h-full overflow-y-auto pr-2 touch-pan-y pointer-events-auto select-text overscroll-contain">
               {/* User Logo (In Flow) - mb-6 for more gap, opacity-100 for visibility */}
               {/* Letter Logo */}
               {!hideLetterLogo && (
