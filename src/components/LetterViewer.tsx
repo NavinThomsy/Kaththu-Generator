@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Envelope } from './Envelope';
 import { AnimatedText, AnimationType } from './AnimatedText';
 
@@ -62,6 +62,21 @@ export function LetterViewer({
     // Force remount to skip closing animation
     setTimeout(() => setResetKey(prev => prev + 1), 100);
   };
+
+  // Lock body scroll when envelope is open on mobile
+  useEffect(() => {
+    if (isEnvelopeOpen && window.innerWidth < 1024) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isEnvelopeOpen]);
 
   // Determine instruction text based on state
   const getInstructionText = () => {

@@ -139,6 +139,22 @@ export default function App() {
         };
     }, [letter.updateFromURL]);
 
+    // Lock body scroll when envelope is open on mobile
+    useEffect(() => {
+        if (isEnvelopeOpen && window.innerWidth < 1024) {
+            document.body.style.overflow = 'hidden';
+            // Also lock html to prevent bounce on iOS
+            document.documentElement.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+        };
+    }, [isEnvelopeOpen]);
+
     // Generate URL params object - only include images if they are hosted URLs (not base64)
     const urlParams = useMemo(() => ({
         text: letter.text,
@@ -210,13 +226,7 @@ export default function App() {
         }
     };
 
-    const handleBackToEditor = () => {
-        const url = new URL(window.location.href);
-        url.search = "";
-        url.hash = "";
-        window.history.pushState({}, "", url.pathname);
-        setViewMode(false);
-    };
+
 
     // --- Render ---
     if (viewMode) {
@@ -246,12 +256,12 @@ export default function App() {
                     letterLogoSrc={letter.letterLogoSrc}
                     hideLetterLogo={letter.hideLetterLogo}
                 />
-                <button
-                    onClick={handleBackToEditor}
+                <a
+                    href="https://kathukal.vercel.app/"
                     className="fixed bottom-4 right-4 text-gray-400 hover:text-gray-600 transition-colors text-xs uppercase tracking-widest bg-white/80 px-3 py-2 rounded-full shadow-sm backdrop-blur-sm"
                 >
                     Create Your Own
-                </button>
+                </a>
             </>
         );
     }
