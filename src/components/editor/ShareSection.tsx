@@ -51,12 +51,12 @@ export function ShareSection({
         }
     };
 
-    const displayUrl = shortUrl || generatedUrl;
+    const displayUrl = shortUrl || '';
 
     return (
         <div className="flex flex-col gap-2 relative">
             <span className="font-mono uppercase tracking-wider" style={{ color: 'rgba(0, 0, 0, 0.8)', fontSize: '12px' }}>
-                Click to copy URL
+                {shortUrl ? 'Share this link:' : 'Ready to share?'}
             </span>
             <div className="flex items-center gap-2">
                 <div className="relative flex-none group" style={{ width: '50%' }}>
@@ -64,6 +64,7 @@ export function ShareSection({
                         type="text"
                         value={displayUrl}
                         readOnly
+                        placeholder="Click Generate →"
                         onClick={() => {
                             if (displayUrl) {
                                 navigator.clipboard.writeText(displayUrl);
@@ -71,9 +72,9 @@ export function ShareSection({
                                 setTimeout(() => setCopyFeedback(false), 2000);
                             }
                         }}
-                        className={`w-full border px-3 font-mono text-xs focus:outline-none cursor-pointer hover:bg-gray-50 transition-colors ${shortUrl ? 'border-green-500 text-green-700 bg-green-50' : 'border-black/10 text-gray-400 bg-white'}`}
+                        className={`w-full border px-3 font-mono text-xs focus:outline-none transition-colors ${shortUrl ? 'border-green-500 text-green-700 bg-green-50 cursor-pointer' : 'border-black/10 text-gray-400 bg-gray-50'}`}
                         style={{ height: '34px', boxSizing: 'border-box' }}
-                        title="Click to copy"
+                        title={shortUrl ? "Click to copy" : "Generate link first"}
                     />
                     {/* Simple Toast */}
                     {copyFeedback && (
@@ -97,8 +98,10 @@ export function ShareSection({
                             <span className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span>
                             SHORTENING...
                         </>
+                    ) : shortUrl ? (
+                        'OPEN LETTER'
                     ) : (
-                        'SAVE & VIEW'
+                        'SAVE & GENERATE LINK'
                     )}
                 </button>
             </div>
