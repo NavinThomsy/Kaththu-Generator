@@ -658,6 +658,10 @@ export function LetterEditor({
                     onSaveAndShare={onSaveAndShare}
                     isUploading={uploadingCount > 0}
                 />
+
+                <p className="font-serif italic text-[11px] text-gray-400 text-center mt-2 opacity-70">
+                    Stamped, sealed and posted with 💌❤️ by <a href="https://navinthomsy.work/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-600 transition-colors underline decoration-dotted underline-offset-2">Navin Thomsy</a>
+                </p>
             </motion.div>
         </div>
     );
