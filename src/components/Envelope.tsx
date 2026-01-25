@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { clsx } from 'clsx';
 import { PaperTexture } from '@paper-design/shaders-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 // @ts-ignore
 import navinLogo from '../assets/Navin Logo.png';
 
@@ -81,6 +82,21 @@ export function Envelope({
   const [isFlipped, setIsFlipped] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      setCanScrollUp(scrollTop > 10);
+      setCanScrollDown(scrollTop + clientHeight < scrollHeight - 10);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(handleScroll, 1000); // Check after open animation
+    return () => clearTimeout(timer);
+  }, [isOpen, children, isMobile]);
 
   // Detect mobile viewport for responsive animations
   useEffect(() => {
@@ -248,7 +264,7 @@ export function Envelope({
                 scrollbar-width: none;
               }
             `}</style>
-            <div ref={scrollRef} className="custom-scrollbar relative z-10 h-full overflow-y-auto pr-2 touch-pan-y pointer-events-auto select-text overscroll-contain">
+            <div ref={scrollRef} onScroll={handleScroll} className="custom-scrollbar relative z-10 h-full overflow-y-auto pr-2 touch-pan-y pointer-events-auto select-text overscroll-contain">
               {/* User Logo (In Flow) - mb-6 for more gap, opacity-100 for visibility */}
               {/* Letter Logo */}
               {!hideLetterLogo && (
@@ -267,6 +283,24 @@ export function Envelope({
                   children
                 )}
               </div>
+            </div>
+
+            {/* Scroll Indicators (Always Visible) */}
+            <div className="absolute right-4 bottom-4 z-50 flex flex-col gap-2 pointer-events-auto opacity-60 hover:opacity-100 transition-opacity mix-blend-multiply">
+              <button
+                onClick={(e) => { e.stopPropagation(); scrollRef.current?.scrollBy({ top: -100, behavior: 'smooth' }); }}
+                disabled={!canScrollUp}
+                className={clsx("p-1.5 rounded-full bg-white/20 hover:bg-white/40 border border-gray-400/30 transition-all", !canScrollUp && "opacity-30 cursor-not-allowed")}
+              >
+                <ChevronUp size={20} className="text-gray-700" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); scrollRef.current?.scrollBy({ top: 100, behavior: 'smooth' }); }}
+                disabled={!canScrollDown}
+                className={clsx("p-1.5 rounded-full bg-white/20 hover:bg-white/40 border border-gray-400/30 transition-all", !canScrollDown && "opacity-30 cursor-not-allowed")}
+              >
+                <ChevronDown size={20} className="text-gray-700" />
+              </button>
             </div>
           </motion.div>
 
