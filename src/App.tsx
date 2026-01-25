@@ -139,6 +139,22 @@ export default function App() {
         };
     }, [letter.updateFromURL]);
 
+    // Lock body scroll when envelope is open on mobile
+    useEffect(() => {
+        if (isEnvelopeOpen && window.innerWidth < 1024) {
+            document.body.style.overflow = 'hidden';
+            // Also lock html to prevent bounce on iOS
+            document.documentElement.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+        };
+    }, [isEnvelopeOpen]);
+
     // Generate URL params object - only include images if they are hosted URLs (not base64)
     const urlParams = useMemo(() => ({
         text: letter.text,
