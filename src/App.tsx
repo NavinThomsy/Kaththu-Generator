@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 import { Envelope } from "./components/Envelope";
 import { AnimatedText, AnimationType } from "./components/AnimatedText";
 import { LetterViewer } from "./components/LetterViewer";
@@ -262,6 +263,7 @@ export default function App() {
                 >
                     Create Your Own
                 </a>
+                <Analytics />
             </>
         );
     }
@@ -421,6 +423,7 @@ export default function App() {
                     </button>
                 </div>
             </div>
+            <Analytics />
         </div>
     );
 }
