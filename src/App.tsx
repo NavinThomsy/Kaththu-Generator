@@ -12,8 +12,8 @@ import { isHostedUrl } from "./utils/imgbbService";
 import { useLetterState } from "./hooks/useLetterState";
 
 const DEFINITIONS = [
-    { word: "kathukal", phonetics: "[ka-thu-kal]" },
-    { word: "കത്തുകൾ", phonetics: "[ka-thu-kal]" },
+    { word: "kaththukal", phonetics: "[kath-thu-kal]" },
+    { word: "കത്തുകൾ", phonetics: "[kath-thu-kal]" },
     { word: "letters", phonetics: "[let-ers]" }
 ];
 
@@ -258,7 +258,7 @@ export default function App() {
                     hideLetterLogo={letter.hideLetterLogo}
                 />
                 <a
-                    href="https://kathukal.vercel.app/"
+                    href="https://kaththukal.vercel.app/"
                     className="fixed bottom-4 right-4 text-gray-400 hover:text-gray-600 transition-colors text-xs uppercase tracking-widest bg-white/80 px-3 py-2 rounded-full shadow-sm backdrop-blur-sm"
                 >
                     Create Your Own
