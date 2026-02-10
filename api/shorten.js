@@ -18,7 +18,7 @@ export default async function handler(request, response) {
         // This will throw if DB is not configured or table missing
         await sql`INSERT INTO links (code, url) VALUES (${code}, ${url})`;
 
-        // Construct custom short URL (e.g., https://kathukal.vercel.app/l/abc)
+        // Construct custom short URL (e.g., https://kaththukal.vercel.app/l/abc)
         const protocol = request.headers['x-forwarded-proto'] || 'https';
         const host = request.headers.host;
         const shortUrl = `${protocol}://${host}/l/${code}`;
